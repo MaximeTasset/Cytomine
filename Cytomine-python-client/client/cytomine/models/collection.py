@@ -97,6 +97,6 @@ class Collection(object):
         if not isinstance(other, Collection):
             raise ValueError("Only two Collection objects can be added together, 'other' is not an instance of Collection.")
         collection = Collection({})
-        collection += self.data()
+        collection += self
         collection += other
         return collection

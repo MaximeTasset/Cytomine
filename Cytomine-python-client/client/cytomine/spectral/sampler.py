@@ -18,10 +18,6 @@ import sys
 import six
 from copy import deepcopy
 
-def f(i):
-    return i*i
-def ff(i):
-    return i*i
 class Sampler:
     def __init__(self, filename=None, cytomine_host=None, cytomine_public_key=None, cytomine_private_key=None, base_path = '/api/', working_path = '/tmp/',file_type=None,verbose=True):
         """
@@ -174,7 +170,7 @@ class Sampler:
 
                   #Get annotations in this image
                   if id_users is None:
-                      annotationsList = [conn.get_annotations(
+                      annotations_list = [conn.get_annotations(
                                               id_project = id_project,
                                               id_user = None,
                                               id_image = image.id,
@@ -182,20 +178,25 @@ class Sampler:
                                               reviewed_only = False)]
                   else:
                       def ann(id_user) : return conn.get_annotations(id_project = id_project,id_user = id_user,id_image = image.id,showWKT=True,reviewed_only = False)
-                      annotationsList = self.pool.map(ann,id_users)
+                      annotations_list = self.pool.map(ann,id_users)
 
 
                   height = image.height
-
-                  annott,polyss,roiss,rect = extract_roi(annotationsList,predict_terms_list,image.width,image.height)
-                  rl = RLock()
-                  nb = len(rect)
-                  self.done = 0
+                  annott,polyss,roiss,rect = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
+                  if self.verbose:
+                      rl = RLock()
+                      nb = len(rect)
+                      self.done = 0
                   def getRect(rectangle):
 
-                      (w,h,sizew,sizeh) = rectangle
-                      co = deepcopy(conn)
-                      sp = co.get_rectangle_spectre(imagegroupHDF5,w,h,sizew,sizeh)
+#                      (w,h,sizew,sizeh) = rectangle
+                      sp = None
+                      for (w,h,sizew,sizeh) in splitRect(rectangle,10,10):
+                          co = deepcopy(conn)
+                          if sp is None:
+                              sp = co.get_rectangle_spectre(imagegroupHDF5,w,h,sizew,sizeh)
+                          else:
+                              sp += co.get_rectangle_spectre(imagegroupHDF5,w,h,sizew,sizeh)
                       if self.verbose:
                           with rl:
                               self.done += 1
@@ -203,8 +204,7 @@ class Sampler:
                               sys.stdout.flush()
                       return sp
                   spectras = self.pool.map(getRect,rect)
-#                  f = lambda (w,h,sizew,sizeh):conn.get_rectangle_spectre(imagegroupHDF5,w,h,sizew,sizeh)
-#                  spectras = [f(r) for r in rect]
+
                   for j,s in enumerate(spectras):
                      if s is not None and len(s):
                          annot.append(annott[j])
@@ -212,38 +212,6 @@ class Sampler:
                          rois.append(roiss[j])
                          spect.append(s)
                          nimage=len(s[0].spectra)
-
-
-#                  for annotations in annotationsList:
-#                      for a in annotations.data():
-#                          a.term = list(set(a.term) & predict_terms_list)
-#
-#                          #if the annotation has no asked term, do not take it
-#                          if not len(a.term):
-#                            continue
-#
-#                          annot.append(a)
-#                          pol = Polygon(loads(a.location))
-#                          polys.append(pol)
-#
-#                          minx, miny, maxx, maxy = pol.bounds
-#
-#                          sizew = int(abs(maxx - minx))
-#                          sizeh = int(abs(maxy - miny))
-#
-#                          #conversion to API up-left (0,0) coordonate
-#                          w = max(min(int(round(minx)),image.width),0)
-#                          h = max(min(int(round(image.height - maxy)),image.height),0)
-#
-#                          if self.verbose:
-#                              sys.stdout.write("\r{}      ".format((w,h,sizew,sizeh,image.height,n)))
-#                              sys.stdout.flush()
-#
-#                          s =
-#
-#                          spect.append(s)
-#                          nimage=len(s[0].spectra)
-#                          rois.append((round(maxx),round(maxy),sizew,sizeh))
 
         if self.verbose:
             sys.stdout.write("\n")
@@ -329,12 +297,12 @@ class Sampler:
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
 
-def extract_roi(annotationsList,predict_terms_list,image_width,image_height):
+def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
     annot = []
     polys = []
     rois = []
     rect = []
-    for annotations in annotationsList:
+    for annotations in annotations_list:
         for a in annotations.data():
             a.term = list(set(a.term) & predict_terms_list)
 
@@ -358,3 +326,19 @@ def extract_roi(annotationsList,predict_terms_list,image_width,image_height):
             rect.append((w,h,sizew,sizeh))
             rois.append((round(maxx),round(maxy),sizew,sizeh))
     return annot,polys,rois,rect
+
+def splitRect(rect,maxw,maxh):
+    (w,h,sizew,sizeh) = rect
+    limitw = w + sizew
+    limith = h + sizeh
+    currw = w
+    rects = []
+    while currw < limitw:
+        tmpw = min(maxw,abs(limitw-w))
+        currh = h
+        while currh < limith:
+            tmph = min(maxh,abs(limith-h))
+            rects.append((currw,currh,tmpw,tmph))
+            currh += tmph
+        currw += tmpw
+    return rects
