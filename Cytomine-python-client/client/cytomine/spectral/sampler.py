@@ -232,7 +232,7 @@ class Sampler:
 
         for i in range(len(spect)):
 
-            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.int8) for _ in range(len(annot[i].term))]
+            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.uint8) for _ in range(len(annot[i].term))]
             roil = [np.zeros((rois[i][2],rois[i][3]),dtype=int) for _ in range(len(annot[i].term))]
             for pixel in spect[i]:
                 #conversion to Cytomine down-left (0,0) coordonate
@@ -337,16 +337,19 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
     return annot,polys,rois,rect
 
 def splitRect(rect,maxw,maxh):
+
+    rects = []
+
     (w,h,sizew,sizeh) = rect
     limitw = w + sizew
     limith = h + sizeh
     currw = w
-    rects = []
+
     while currw < limitw:
-        tmpw = min(maxw,abs(limitw-w))
+        tmpw = min(maxw,abs(limitw-currw))
         currh = h
         while currh < limith:
-            tmph = min(maxh,abs(limith-h))
+            tmph = min(maxh,abs(limith-currh))
             rects.append((currw,currh,tmpw,tmph))
             currh += tmph
         currw += tmpw
