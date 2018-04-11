@@ -18,8 +18,8 @@ from __future__ import division
 # */
 
 
-__author__          = "Stévens Benjamin <b.stevens@ulg.ac.be>" 
-__contributors__    = ["Marée Raphaël <raphael.maree@ulg.ac.be>", "Rollus Loïc <lrollus@ulg.ac.be"]                
+__author__          = "Stévens Benjamin <b.stevens@ulg.ac.be>"
+__contributors__    = ["Marée Raphaël <raphael.maree@ulg.ac.be>", "Rollus Loïc <lrollus@ulg.ac.be"]
 __copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http://www.cytomine.be/"
 __version__         = '0.1'
 
@@ -36,6 +36,8 @@ import numpy
 import Queue
 import threading
 import copy
+from multiprocessing.pool import ThreadPool
+import numpy as np
 
 class Reader(object):
 
@@ -51,7 +53,7 @@ class Reader(object):
         data = data.transpose()
         image = Image.fromarray(data)
         return image
-    
+
     def read(self, async = False):
         raise NotImplementedError( "Should have implemented this" )
 
@@ -105,7 +107,7 @@ class ThreadUrl(threading.Thread):
                 url, box = self.queue.get_nowait()
             except Queue.Empty:
                 continue
-		
+
             #grabs urls of hosts and prints first 1024 bytes of page
             resp, content = self.cytomine.fetch_url(url)
 
@@ -122,13 +124,13 @@ class ThreadUrl(threading.Thread):
                 if self.verbose :
                     print "Error while requesting %s " % short_url
                     print "Response %s " % resp
-            
+
             #signals to queue job is done
             self.queue.task_done()
 
-                
-        
-        
+
+
+
 class Bounds(object):
 
     def __init__(self, x, y, width, height):
@@ -139,6 +141,9 @@ class Bounds(object):
 
     def __str__( self ):
         return "Bounds : %d, %d, %d, %d" % (self.x, self.y, self.width, self.height)
+
+    def copy(self):
+        return Bounds(self.x,self.y,self.width,self.height)
 
 class CytomineReader(Reader):
 
@@ -199,7 +204,7 @@ class CytomineReader(Reader):
         if (not self.terminate_event):
             self.terminate_event = threading.Event()
 
-        print rows 
+        print rows
         print cols
         #spawn a pool of threads, and pass them queue instance
         for i in range(8):
@@ -210,9 +215,9 @@ class CytomineReader(Reader):
 
         for r in xrange(rows):
             for c in xrange(cols):
-                row = row0 + r 
+                row = row0 + r
                 col = col0 + c
-            
+
                 tile_group = self.findTileGroup(self.zoom, col, row)
                 base_url = self.image.server_urls[random.randint(0, len(self.image.server_urls) -1)]
 #                url = "%sTileGroup%d/%d-%d-%d.jpg" % (base_url, tile_group, self.image.depth - self.zoom, col, row) #old syntax
@@ -239,7 +244,7 @@ class CytomineReader(Reader):
 
     def result(self):
         return self.rgb2bgr(self.data)
-    
+
     def read_window(self):
         window = copy.copy(self.window_position)
         window.width = window.width * pow(2, self.zoom)
@@ -257,18 +262,18 @@ class CytomineReader(Reader):
         return previous_x != self.window_position.x
 
     def right(self):
-        #print "overlap = %f" % self.overlap 
+        #print "overlap = %f" % self.overlap
         #print "oldx = %d" % self.window_position.x
-        
+
         if self.window_position.x >= (self.image.levels[self.zoom]['level_width'] - self.window_position.width):
             return False
         else:
             new_x = self.window_position.x + (self.window_position.width - self.overlap)
             if new_x > (self.image.levels[self.zoom]['level_width'] - self.window_position.width):
                 new_x = self.image.levels[self.zoom]['level_width'] - self.window_position.width
-            
+
             self.window_position.x = new_x
-            print "newx = %d" % self.window_position.x            
+            print "newx = %d" % self.window_position.x
             return True
 
     def up(self):
@@ -283,7 +288,7 @@ class CytomineReader(Reader):
             new_y = self.window_position.y + (self.window_position.height - self.overlap)
             if new_y > (self.image.levels[self.zoom]['level_height'] - self.window_position.height):
                 new_y = self.image.levels[self.zoom]['level_height'] - self.window_position.height
-            
+
             self.window_position.y = new_y
             return True
 
@@ -326,7 +331,128 @@ class CytomineReader(Reader):
         new_y_middle = y_middle / zoom_factor
         self.window_position.x = int(max(0, new_x_middle - half_width) / self.image.tile_size) * self.image.tile_size
         self.window_position.y = int(max(0, new_y_middle - half_height) / self.image.tile_size) * self.image.tile_size
-        
+
+def splitRect(rect,maxw,maxh):
+    (w,h,sizew,sizeh) = rect
+    limitw = w + sizew
+    limith = h + sizeh
+    currw = w
+    rects = []
+    while currw < limitw:
+        tmpw = min(maxw,abs(limitw-w))
+        currh = h
+        while currh < limith:
+            tmph = min(maxh,abs(limith-h))
+            rects.append((currw,currh,tmpw,tmph))
+            currh += tmph
+        currw += tmpw
+    return rects
+
+class CytomineSpectralReader(Reader):
+
+    def __init__(self,cytomine,imagegroup_id,bounds = Bounds(0,0, 1024, 1024),tile_size = Bounds(0,0,30,30),overlap=0,num_thread=4):
+        super(Reader, self).__init__()
+        self.cytomine = cytomine #cytomine.cytomine.Cytomine
+        self.imagegroup_id = imagegroup_id
+        self.imagegroupHDF5 = cytomine.get_imageGroupHDF5(imagegroup_id).id
+
+        self.bounds = bounds
+        self.window_position = [bounds.x,bounds.y]
+        self.tile_size = tile_size
+        self.overlap = overlap
+        self.pool = ThreadPool(num_thread)
+
+    def getDimension(self):
+        if not hasattr(self,'dimension'):
+            images = self.cytomine.get_imageSequence(self.imagegroup_id)
+            image = self.cytomine.get_image_instance(images[0].image)
+            #width and height of the imagegroup and the number of channel
+            self.dimension = (image.width,image.height,len(images))
+
+        return self.dimension
+
+    def read(self, async = False):
+        tile = self.window_position + [min(self.tile_size.width,abs(self.bounds.x+self.bounds.width-self.window_position[0])),
+                                       min(self.tile_size.height,abs(self.bounds.y+self.bounds.height-self.window_position[1]))]
+        rects = splitRect(tile,15,15)
+        def getRect(rectangle):
+
+            sp = None
+            for (w,h,sizew,sizeh) in splitRect(rectangle,10,10):
+                co = copy.deepcopy(self.conn)
+                if sp is None:
+                    sp = co.get_rectangle_spectre(self.imagegroupHDF5,w,h,sizew,sizeh)
+                else:
+                    sp += co.get_rectangle_spectre(self.imagegroupHDF5,w,h,sizew,sizeh)
+
+                return sp
+        if async:
+            self.result = (self.pool.map_async(getRect,rects),True,tuple(tile))
+        else:
+            self.result = (self.pool.map(getRect,rects),False,tuple(tile))
+
+    def getResult(self):
+
+        if hasattr(self,'result'):
+            if self.result[1]:
+                list_collections = self.result[0].get()
+            else:
+                list_collections = list(self.result[0])
+            if len(list_collections):
+                for i in xrange(len(list_collections)):
+                    if len(list_collections[i]):
+                        num_spectra = len(list_collections[i][0].spectra)
+                        break
+                image = np.zeros((self.result[2][2],self.result[2][3],num_spectra),dtype=np.int8)
+                image_coord = np.zeros((self.result[2][2],self.result[2][3],2))
+                for collection in list_collections:
+                    for spectre in collection:
+                        position = (abs(self.result[2][0] - spectre.pxl[0]),abs(self.result[2][1] - spectre.pxl[1]))
+                        image[position] = spectre.spectra
+                        image_coord[position] = spectre.pxl
+
+            else:
+                return
 
 
+    def left(self):
+        if self.bounds.x < (self.window_position[0] - self.tile_size.width + self.overlap):
+            return False
+        else:
+            self.window_position[0] -= self.tile_size.width + self.overlap
+            return True
 
+    def right(self):
+        if self.bounds.x + self.bounds.width >= (self.window_position[0] + self.tile_size.width - self.overlap):
+            return False
+        else:
+            self.window_position[0] += self.tile_size.width - self.overlap
+            return True
+
+    def up( self):
+        if self.bounds.y < (self.window_position[1] - self.tile_size.height + self.overlap):
+            return False
+        else:
+            self.window_position[1] -= self.tile_size.height + self.overlap
+            return True
+
+    def down(self):
+        if self.bounds.y + self.bounds.height >= (self.window_position[1] + self.tile_size.height - self.overlap):
+            return False
+        else:
+            self.window_position[1] += self.tile_size.height - self.overlap
+            return True
+
+    def next(self):
+        if self.right():
+            return True
+        else :
+            self.window_position[0] = self.bounds.x
+            return self.down()
+
+    def previous(self):
+        if self.left():
+            return True
+        else :
+            while self.right(): continue;
+            return self.up()

@@ -136,7 +136,11 @@ class Sampler:
         for i in range(len(chi2)):
           writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
 
-    def loadDataFromCytomine(self,conn=None,imagegroupls=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None):
+
+    def loadDataFromCytomine(self,conn=None,imagegroup_id_list=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None):
+        """
+        " read the annotation of an imagegroup from a project/
+        """
         if conn is None:
             conn = cytomine.Cytomine(self.cytomine_host, self.cytomine_public_key,
                                        self.cytomine_private_key, base_path = self.base_path,
@@ -146,8 +150,6 @@ class Sampler:
           terms = conn.get_project_terms(id_project)
           predict_terms_list = {term.id for term in terms}
 
-        #load thread
-
         predict_terms_list = set(predict_terms_list)
         polys = []
         spect = []
@@ -155,18 +157,23 @@ class Sampler:
         rois = []
 
         n = 0
-        for imagegroup in imagegroupls:
-            #Get project imagegroupHDF5 and images from imagegroup
-            imagegroupHDF5 = conn.get_imageGroupHDF5(imagegroup).id
-            images = conn.get_project_image_instances(id_project)
 
-            for i in images:
+
+
+        for imagegroup_id in imagegroup_id_list:
+            #Get project imagegroupHDF5 and images from imagegroup_id
+            imagegroupHDF5 = conn.get_imageGroupHDF5(imagegroup_id).id
+
+            #allow to get only the images used in the HDF5 imageGroup
+            images = conn.get_imageSequence(imagegroup_id)
+
+            for im in images:
                 if self.verbose:
                     sys.stdout.write("\r                                                                   {}      ".format(n))
                     sys.stdout.flush()
                 n += 1
-                if i.numberOfAnnotations:
-                  image = conn.get_image_instance(i.id)
+                image = conn.get_image_instance(im.image)
+                if image.numberOfAnnotations:
 
                   #Get annotations in this image
                   if id_users is None:
@@ -181,13 +188,12 @@ class Sampler:
                       annotations_list = self.pool.map(ann,id_users)
 
 
-                  height = image.height
                   annott,polyss,roiss,rect = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
                   if self.verbose:
                       rl = RLock()
                       nb = len(rect)
                       self.done = 0
-
+                  #function made on fly to fetch rectangle
                   def getRect(rectangle):
 
                       sp = None
@@ -226,11 +232,11 @@ class Sampler:
 
         for i in range(len(spect)):
 
-            roi = [np.zeros((rois[i][2],rois[i][3],nimage)) for _ in range(len(annot[i].term))]
-            roil = [np.zeros((rois[i][2],rois[i][3])) for _ in range(len(annot[i].term))]
+            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.int8) for _ in range(len(annot[i].term))]
+            roil = [np.zeros((rois[i][2],rois[i][3]),dtype=int) for _ in range(len(annot[i].term))]
             for pixel in spect[i]:
                 #conversion to Cytomine down-left (0,0) coordonate
-                lp = [pixel.pxl[0],height-pixel.pxl[1]]
+                lp = [pixel.pxl[0],rois[i][4]-pixel.pxl[1]]
                 for t in range(len(annot[i].term)):
                     roi[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = pixel.spectra
                 p = Point(lp)
@@ -327,7 +333,7 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
             h = max(min(int(round(image_height - maxy)),image_height),0)
 
             rect.append((w,h,sizew,sizeh))
-            rois.append((round(maxx),round(maxy),sizew,sizeh))
+            rois.append((round(maxx),round(maxy),sizew,sizeh,image_height))
     return annot,polys,rois,rect
 
 def splitRect(rect,maxw,maxh):

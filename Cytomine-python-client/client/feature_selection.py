@@ -125,7 +125,7 @@ def main(argv):
   d = os.path.dirname(parameters['pyxit_save_to'])
   if not os.path.exists(d):
       os.makedirs(d)
-  samplerr.saveFeatureSelectionInCSV(join(d,"extraction-BloodVessels.csv"),n_estimators=1000,max_features=100000)
+  samplerr.saveFeatureSelectionInCSV(join(d,"results.csv"),n_estimators=1000,max_features=100000)
   job = conn.update_job_status(job, status = job.TERMINATED, status_comment = "Finish", progress = 100)
 
 if __name__ == "__main__":
