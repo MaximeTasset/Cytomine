@@ -47,7 +47,7 @@ image_groups_id = [im.id for im in conn.get_image_groups(id_project)]
 ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'BloodVessels']
 predict_terms_list = [term.id for term in conn.get_project_terms(id_project)]
 ##sampler = Sampler()
-##sampler.loadDataFromCytomine(conn=conn,imagegroupls=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
+##sampler.loadDataFromCytomine(conn=conn,imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
 ##sampler.saveFeatureSelectionInCSV("extraction-Urothelium.csv",n_estimators=1000,max_features='auto')
 ##print(sampler.getinfo())
 ##data,label = sampler.rois2data()
@@ -58,10 +58,10 @@ predict_terms_list = [term.id for term in conn.get_project_terms(id_project)]
 ##print(et.score(data[ind[int(.5*len(data)):]],label[ind[int(.5*len(data)):]]))
 ##
 ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'Urothelium']
-#samplerr = Sampler()
-#samplerr.loadDataFromCytomine(conn=conn,imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
-##samplerr.saveFeatureSelectionInCSV("extraction-BloodVessels.csv",n_estimators=100,max_features=100000)
-#print(samplerr.getinfo())
+samplerr = Sampler()
+samplerr.loadDataFromCytomine(conn=conn,imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
+samplerr.saveFeatureSelectionInCSV("extraction-BloodVessels.csv",n_estimators=100,max_features=100000)
+print(samplerr.getinfo())
 #
 #data,label = samplerr.rois2data()
 #et = ETC(n_estimators=100,n_jobs=-1)
@@ -72,7 +72,7 @@ predict_terms_list = [term.id for term in conn.get_project_terms(id_project)]
 
 #predict_terms_list = [term.id for term in conn.get_project_terms(id_projects)]
 #samplerrr = Sampler()
-#samplerrr.loadDataFromCytomine(conn=conn,imagegroupls=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
+#samplerrr.loadDataFromCytomine(conn=conn,imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
 #samplerrr.saveFeatureSelectionInCSV("extraction-all.csv",n_estimators=10,max_features='auto',usedata=.2)
 #print(samplerrr.getinfo())
 #
