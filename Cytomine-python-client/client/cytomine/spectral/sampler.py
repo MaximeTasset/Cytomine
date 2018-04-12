@@ -75,11 +75,11 @@ class Sampler:
         finally:
             f.close()
 
-    def chi2(self, sort=False, N=0,usedata=0.2):
-        n_sample = len(self.data[1])
+    def chi2(self, sort=False, N=0,usedata=1):
+        n_sample = len(self.data["X"])
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        ch,_ = chi2(self.data[1][ind[:int(usedata*n_sample)]],self.data[2][ind[:int(usedata*n_sample)]])
+        ch,_ = chi2(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
         if not N:
             N = len(ch)
 
@@ -88,11 +88,11 @@ class Sampler:
         else:
           return [(ch[i],i) for i in range(len(ch))]
 
-    def f_classif(self, sort=False, N=0,usedata=0.2):
-        n_sample = len(self.data[1])
+    def f_classif(self, sort=False, N=0,usedata=1):
+        n_sample = self.numData
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        f,_ = f_classif(self.data[1][ind[:int(usedata*n_sample)]],self.data[2][ind[:int(usedata*n_sample)]])
+        f,_ = f_classif(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
         if not N:
             N = len(f)
 
@@ -101,13 +101,13 @@ class Sampler:
         else:
           return [(f[i],i) for i in range(len(f))]
 
-    def features_ETC(self, sort=False, N=0,n_estimators=1000,max_features='auto',min_samples_split=2,usedata=0.2):
-        n_sample = len(self.data[1])
+    def features_ETC(self, sort=False, N=0,n_estimators=1000,max_features='auto',min_samples_split=2,usedata=1):
+        n_sample = self.numData
         ind = list(range(n_sample))
         np.random.shuffle(ind)
         if not isinstance(max_features, six.string_types) and max_features is not None:
-            max_features = max(1,min(max_features,int(self.data[1].shape[1])))
-        etc = ETC(n_estimators=n_estimators,max_features=max_features,min_samples_split=min_samples_split).fit(self.data[1][ind[:int(usedata*n_sample)]],self.data[2][ind[:int(usedata*n_sample)]])
+            max_features = max(1,min(max_features,int(self.data["X"].shape[1])))
+        etc = ETC(n_estimators=n_estimators,max_features=max_features,min_samples_split=min_samples_split).fit(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
         f = etc.feature_importances_
         if not N:
             N = len(f)
@@ -117,7 +117,7 @@ class Sampler:
         else:
           return [(f[i],i) for i in range(len(f))]
 
-    def saveFeatureSelectionInCSV(self,filename,n_estimators=1000,max_features=None,min_samples_split=2,usedata=0.2):
+    def saveFeatureSelectionInCSV(self,filename,n_estimators=1000,max_features=None,min_samples_split=2,usedata=1):
       filename = str(filename)
       if not filename.endswith('.csv'):
         filename += ".csv"
@@ -268,12 +268,12 @@ class Sampler:
         self.numData = int(len(dataCoord))
         self.numUnknown = int(len(unknownCoord))
 
-        self.data = (np.asarray(dataCoord),
-                     np.asarray(dataX),
-                     np.asarray(dataY),
-                     np.asarray(unknownCoord),
-                     np.asarray(unknownX))
-        self.numFeature = int(self.data[1].shape[1])
+        self.data = {"data_coord":np.asarray(dataCoord),
+                     "X":np.asarray(dataX),
+                     "Y":np.asarray(dataY),
+                     "unknown_coord":np.asarray(unknownCoord),
+                     "unknown_X":np.asarray(unknownX)}
+        self.numFeature = int(self.data["X"].shape[1])
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
         """

@@ -38,6 +38,7 @@ import threading
 import copy
 from multiprocessing.pool import ThreadPool
 import numpy as np
+from collections import deque
 
 class Reader(object):
 
@@ -366,6 +367,7 @@ class CytomineSpectralReader(Reader):
         self.tile_size = tile_size
         self.overlap = overlap
         self.pool = ThreadPool(num_thread)
+        self.results = deque()
 
     def reverseHeight(self,coord):
         #allow to switch from the coordonate system from the Rest API to the Cytomine one.
@@ -392,28 +394,29 @@ class CytomineSpectralReader(Reader):
             return sp
 
         if async:
-            self.result = (self.pool.map_async(getRect,rects),True,tuple(tile))
+            self.results.appendleft((self.pool.map_async(getRect,rects),True,tuple(tile)))
         else:
-            self.result = (self.pool.map(getRect,rects),False,tuple(tile))
+            self.results.appendleft((self.pool.map(getRect,rects),False,tuple(tile)))
 
     def getResult(self):
 
-        if hasattr(self,'result'):
-            if self.result[1]:
-                list_collections = self.result[0].get()
+        if len(self.results):
+            result = self.results.pop()
+            if result[1]:
+                list_collections = result[0].get()
             else:
-                list_collections = list(self.result[0])
+                list_collections = list(result[0])
 
             if len(list_collections):
                 for i in xrange(len(list_collections)):
                     if len(list_collections[i]):
                         num_spectra = len(list_collections[i][0].spectra)
                         break
-                image = np.zeros((self.result[2][2],self.result[2][3],num_spectra),dtype=np.uint8)
-                image_coord = np.zeros((self.result[2][2],self.result[2][3],2))
+                image = np.zeros((result[2][2],result[2][3],num_spectra),dtype=np.uint8)
+                image_coord = np.zeros((result[2][2],result[2][3],2))
                 for collection in list_collections:
                     for spectre in collection:
-                        position = (abs(self.result[2][0] - spectre.pxl[0]),abs(self.result[2][1] - spectre.pxl[1]))
+                        position = (abs(result[2][0] - spectre.pxl[0]),abs(result[2][1] - spectre.pxl[1]))
                         image[position] = spectre.spectra
                         image_coord[position] = spectre.pxl
 
@@ -424,28 +427,28 @@ class CytomineSpectralReader(Reader):
 
 
     def left(self):
-        if self.bounds.x < (self.window_position[0] - self.tile_size.width + self.overlap):
+        if self.bounds.x > (self.window_position[0] - self.tile_size.width + self.overlap):
             return False
         else:
             self.window_position[0] -= self.tile_size.width + self.overlap
             return True
 
     def right(self):
-        if min(self.bounds.x + self.bounds.width,self.dimension[0]) >= (self.window_position[0] + self.tile_size.width - self.overlap):
+        if min(self.bounds.x + self.bounds.width,self.dimension[0]) <= (self.window_position[0] + self.tile_size.width - self.overlap):
             return False
         else:
             self.window_position[0] += self.tile_size.width - self.overlap
             return True
 
     def up( self):
-        if self.bounds.y < (self.window_position[1] - self.tile_size.height + self.overlap):
+        if self.bounds.y > (self.window_position[1] - self.tile_size.height + self.overlap):
             return False
         else:
             self.window_position[1] -= self.tile_size.height + self.overlap
             return True
 
     def down(self):
-        if min(self.bounds.y + self.bounds.height,self.dimension[1]) >= (self.window_position[1] + self.tile_size.height - self.overlap):
+        if min(self.bounds.y + self.bounds.height,self.dimension[1]) <= (self.window_position[1] + self.tile_size.height - self.overlap):
             return False
         else:
             self.window_position[1] += self.tile_size.height - self.overlap
@@ -455,8 +458,10 @@ class CytomineSpectralReader(Reader):
         if self.right():
             return True
         else :
-            self.window_position[0] = self.bounds.x
-            return self.down()
+            ret = self.down()
+            if ret:
+                self.window_position[0] = self.bounds.x
+            return ret
 
     def previous(self):
         if self.left():
