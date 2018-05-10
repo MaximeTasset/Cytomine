@@ -22,10 +22,11 @@ from sklearn.ensemble import ExtraTreesClassifier as ETC
 import csv
 import sys
 import six
-from copy import deepcopy
+import socket,time
+import psutil
 
 class Extractor:
-    def __init__(self, filename=None,file_type=None,verbose=True):
+    def __init__(self, filename=None,file_type=None,verbose=True,nb_job=1):
         """
         Parameters
         ----------
@@ -34,13 +35,9 @@ class Extractor:
         square_size : the square side size (in pixel)
         """
         self.filename = filename
-#        self.cytomine_host = cytomine_host
-#        self.cytomine_public_key = cytomine_public_key
-#        self.cytomine_private_key = cytomine_private_key
-#        self.base_path = base_path
-#        self.working_path = working_path
+        self.nb_job = nb_job if nb_job > 0 else max(psutil.cpu_count() + nb_job,1)
         self.verbose = verbose
-        self.pool = ThreadPool()
+        self.pool = ThreadPool(self.nb_job)
 
         self.data = None
         if not file_type:
@@ -195,21 +192,41 @@ class Extractor:
                       annotations_list = self.pool.map(ann,id_users)
 
                   annott,polyss,roiss,rect = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
+
                   if self.verbose:
                       rl = RLock()
                       nb = len(rect)
                       self.done = 0
-                  #function made on fly to fetch rectangle
+                  #function made on fly to fetch rectangles
                   def getRect(rectangle):
-#                      co = deepcopy(conn)
                       sp = None
                       im =  ImageGroupHDF5(id=imagegroupHDF5)
-                      for (w,h,sizew,sizeh) in splitRect(rectangle,max_fetch_size[0],max_fetch_size[1]):
+                      requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                      while len(requests):
+                          (w,h,sizew,sizeh) = requests.pop()
+                          try:
+                            if sp is None:
+                                sp = im.rectangle_all(w,h,sizew,sizeh)
+                            else:
+                                sp += im.rectangle_all(w,h,sizew,sizeh)
+                          except socket.error :
+                            print(socket.error)
+                            time.sleep(1)
+                            if sizew > 1 and sizeh > 1:
+                              requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                            else:
+                              print("error, cannot retreive data")
+                            continue
+                          except socket.timeout :
+                            print(socket.timeout)
+                            time.sleep(1)
+                            if sizew > 1 and sizeh > 1:
+                              requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                            else:
+                              print("error, cannot retreive data")
 
-                          if sp is None:
-                              sp = im.rectangle_all(w,h,sizew,sizeh)
-                          else:
-                              sp += im.rectangle_all(w,h,sizew,sizeh)
+                            continue
+
                       if self.verbose:
                           with rl:
                               self.done += 1
@@ -348,8 +365,8 @@ def splitRect(rect,maxw,maxh):
     rects = []
 
     (w,h,sizew,sizeh) = rect
-    limitw = w + sizew
-    limith = h + sizeh
+    limitw = int(w + sizew)
+    limith = int(h + sizeh)
     currw = w
 
     while currw < limitw:
@@ -357,7 +374,7 @@ def splitRect(rect,maxw,maxh):
         currh = h
         while currh < limith:
             tmph = min(maxh,abs(limith-currh))
-            rects.append((currw,currh,tmpw,tmph))
+            rects.append((int(currw),int(currh),int(tmpw),int(tmph)))
             currh += tmph
         currw += tmpw
     return rects

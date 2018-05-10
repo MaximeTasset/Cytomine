@@ -384,11 +384,11 @@ class CytomineSpectralReader(Reader):
         rects = splitRect(tile,max_fetch_size[0],max_fetch_size[1])
 
         def getRect(rectangle):
-#                      co = deepcopy(conn)
           sp = None
           im =  ImageGroupHDF5(id=self.imagegroupHDF5)
           for (w,h,sizew,sizeh) in splitRect(rectangle,max_fetch_size[0],max_fetch_size[1]):
-
+#            reverse the coordonate to get the cytomine based one
+            w,h = self.reverseHeight((w,h))
             if sp is None:
               sp = im.rectangle_all(w,h,sizew,sizeh)
             else:
@@ -402,8 +402,9 @@ class CytomineSpectralReader(Reader):
         else:
             self.results.appendleft((self.pool.map(getRect,rects),False,tuple(tile)))
 
-    def getResult(self):
+    def getResult(self,all_coord=True):
 
+        #self.results a queue of (map/map_result,is_async,tile_coord)
         if len(self.results):
             result = self.results.pop()
             if result[1]:
@@ -417,12 +418,16 @@ class CytomineSpectralReader(Reader):
                         num_spectra = len(list_collections[i][0]['spectra'])
                         break
                 image = np.zeros((result[2][2],result[2][3],num_spectra),dtype=np.uint8)
-                image_coord = np.zeros((result[2][2],result[2][3],2))
+                if all_coord:
+                    image_coord = np.zeros((result[2][2],result[2][3],2))
+                else:
+                    image_coord = np.asarray(result[2])
                 for collection in list_collections:
                     for spectra in collection:
                         position = (abs(result[2][0] - spectra['pxl'][0]),abs(result[2][1] - spectra['pxl'][1]))
                         image[position] = spectra['spectra']
-                        image_coord[position] = self.reverseHeight(spectra['pxl'])
+                        if all_coord:
+                            image_coord[position] = spectra['pxl']
 
                 return image,image_coord
 

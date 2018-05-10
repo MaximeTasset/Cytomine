@@ -50,9 +50,9 @@ with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_pat
     ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'BloodVessels']
     predict_terms_list = [term.id for term in ontology.TermCollection(filters={'project':id_project}).fetch()]
 
-    extra = Extractor()
+    extra = Extractor(nb_job=-1)
     extra.loadDataFromCytomine(imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
-    extra.saveFeatureSelectionInCSV("extraction-28146931.csv",n_estimators=50,max_features=100000,usedata=(1 if id_project==31054043 else 0.2))
+#    extra.saveFeatureSelectionInCSV("extraction-28146931.csv",n_estimators=50,max_features=100000,usedata=(1 if id_project==31054043 else 0.2))
 
     print(extra.getinfo())
 
