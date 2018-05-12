@@ -31,6 +31,7 @@ from cytomine.models.collection import Collection
 from cytomine.models.model import Model
 
 import numpy as np
+import socket
 
 
 class ImageGroup(Model):
@@ -118,8 +119,14 @@ class ImageGroupHDF5(Model):
 
     def rectangle_all(self, x, y, width, height):
         uri = "imagegroupHDF5/{}/{}/{}/{}/{}/rectangle.json".format(self.id, x, y, width, height)
-        return Cytomine.get_instance().get(uri)["collection"]
 
+        try:
+          val = Cytomine.get_instance().get(uri)
+          return val["collection"]
+        except TypeError:
+          print(val)
+          #something wrong append
+          raise socket.error
 
 
 # class ImageGroupHDF5Collection(Collection):

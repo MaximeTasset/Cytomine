@@ -40,6 +40,8 @@ from collections import deque
 from ..models.imagegroup import ImageGroupHDF5,ImageGroup,ImageSequenceCollection
 from ..models.image import ImageInstance
 
+import socket,time
+
 class Reader(object):
     def __init__(self):
         return
@@ -387,12 +389,45 @@ class CytomineSpectralReader(Reader):
           sp = None
           im =  ImageGroupHDF5(id=self.imagegroupHDF5)
           for (w,h,sizew,sizeh) in splitRect(rectangle,max_fetch_size[0],max_fetch_size[1]):
-#            reverse the coordonate to get the cytomine based one
+            # reverse the coordonates to get the API based one
             w,h = self.reverseHeight((w,h))
             if sp is None:
               sp = im.rectangle_all(w,h,sizew,sizeh)
             else:
               sp += im.rectangle_all(w,h,sizew,sizeh)
+          requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+          while len(requests):
+            (w,h,sizew,sizeh) = requests.pop()
+            w,h = self.reverseHeight((w,h))
+            try:
+              if sp is None:
+                  sp = im.rectangle_all(w,h,sizew,sizeh)
+              else:
+                  sp += im.rectangle_all(w,h,sizew,sizeh)
+            except socket.error :
+              print(socket.error)
+              time.sleep(1)
+              if sizew > 1 and sizeh > 1:
+                #restore the cytomine coordonates
+                w,h = self.reverseHeight((w,h))
+                requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+              else:
+                w,h = self.reverseHeight((w,h))
+                requests.append((w,h,sizew,sizeh))
+              continue
+            except socket.timeout :
+              print(socket.timeout)
+              time.sleep(1)
+              if sizew > 1 and sizeh > 1:
+                #restore the cytomine coordonates
+                w,h = self.reverseHeight((w,h))
+                requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+              else:
+                w,h = self.reverseHeight((w,h))
+                requests.append((w,h,sizew,sizeh))
+
+              continue
+
 
           sp.sort(key=lambda data: data["pxl"])
           return sp
@@ -424,6 +459,8 @@ class CytomineSpectralReader(Reader):
                     image_coord = np.asarray(result[2])
                 for collection in list_collections:
                     for spectra in collection:
+                        #return to the cytomine coordonates system
+                        spectra['pxl'] = self.reverseHeight(spectra['pxl'])
                         position = (abs(result[2][0] - spectra['pxl'][0]),abs(result[2][1] - spectra['pxl'][1]))
                         image[position] = spectra['spectra']
                         if all_coord:

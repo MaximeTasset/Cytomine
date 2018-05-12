@@ -45,15 +45,19 @@ id_project=28146931
 #Connection to Cytomine Core
 with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_path = '/api/', working_path = '/tmp/', verbose= logging.WARNING,timeout=1200) as cytomine:
 
-    image_groups_id = [im.id for im in imagegroup.ImageGroupCollection(filters={'project':id_project}).fetch()]
-    print(image_groups_id)
-    ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'BloodVessels']
-    predict_terms_list = [term.id for term in ontology.TermCollection(filters={'project':id_project}).fetch()]
-
-    extra = Extractor(nb_job=-1)
-    extra.loadDataFromCytomine(imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
-#    extra.saveFeatureSelectionInCSV("extraction-28146931.csv",n_estimators=50,max_features=100000,usedata=(1 if id_project==31054043 else 0.2))
-
-    print(extra.getinfo())
+  from cytomine.utilities.reader import *
+  reader = CytomineSpectralReader(28407375,bounds = Bounds(0,0, 100000, 100000),tile_size = Bounds(0,0,30,30),overlap=0,num_thread=10)
+  reader.read()
+  reader.getResult()
+#    image_groups_id = [im.id for im in imagegroup.ImageGroupCollection(filters={'project':id_project}).fetch()]
+#    print(image_groups_id)
+#    ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'BloodVessels']
+#    predict_terms_list = [term.id for term in ontology.TermCollection(filters={'project':id_project}).fetch()]
+#
+#    extra = Extractor(nb_job=-1)
+#    extra.loadDataFromCytomine(imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
+##    extra.saveFeatureSelectionInCSV("extraction-28146931.csv",n_estimators=50,max_features=100000,usedata=(1 if id_project==31054043 else 0.2))
+#
+#    print(extra.getinfo())
 
 

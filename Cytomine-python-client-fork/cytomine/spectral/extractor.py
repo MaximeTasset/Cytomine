@@ -297,7 +297,7 @@ class Extractor:
                      "Y":np.asarray(dataY),
                      "unknown_coord":np.asarray(unknownCoord),
                      "unknown_X":np.asarray(unknownX)}
-        self.numFeature = int(self.data["X"].shape[1])
+        self.numFeature = int(self.data["X"].shape[1]) if len(spect) else None
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
         """
