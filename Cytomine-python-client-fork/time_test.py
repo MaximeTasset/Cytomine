@@ -32,8 +32,8 @@ if __name__ == "__main__":
   sys.stdout.flush()
 
   cytomine_host="demo.cytomine.be"
-  cytomine_public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5"
-  cytomine_private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb"
+  cytomine_public_key="XXX"
+  cytomine_private_key="XXX"
   id_project=28146931
   #id_users=[25637310]
 
