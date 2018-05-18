@@ -19,33 +19,75 @@
 __author__          = "Maxime Tasset <maxime.tasset@student.ulg.ac.be>"
 __copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http://www.cytomine.be/"
 
+from cytomine import Cytomine
+from cytomine.models import Software, SoftwareParameter
 
-import cytomine
-import sys
 
-#Connect to cytomine, edit connection values
-cytomine_host="demo.cytomine.be"
-cytomine_public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5"
-cytomine_private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb"
-id_project=28146931
+def main(argv):
+    with Cytomine.connect_from_cli(argv):
+        software = Software(name="Feature_Selection",
+                            service_name="pyxitSuggestedTermJobService",
+                            result_name="ValidateAnnotation").save()
 
-#Connection to Cytomine Core
-conn = cytomine.Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_path = '/api/', working_path = '/tmp/', verbose= False)
+        SoftwareParameter("cytomine_id_software", type="Number", id_software=software.id,
+                          index=100, set_by_server=True, required=True).save()
+        SoftwareParameter("cytomine_id_project", type="Number", id_software=software.id,
+                          index=100, set_by_server=True, required=True).save()
+        SoftwareParameter("cytomine_users_annotation", type="Number", id_software=software.id, default_value=software.id,
+                          index=200, set_by_server=True, required=True).save()
 
-#define software parameter template
+        # filtering annotations
+        SoftwareParameter("cytomine_predict_term", type="ListDomain", id_software=software.id, index=500, default_value=None,
+                          uri="/api/project/$currentProject$/term.json",uri_sort_attribut="name",uri_print_attribut="name").save()
+        SoftwareParameter("cytomine_positive_predict_term", type="ListDomain", id_software=software.id, index=600, default_value=None,
+                          uri="/api/project/$currentProject$/user.json",uri_sort_attribut="name",uri_print_attribut="name").save()
 
-software = conn.add_software("Feature_Selection", "pyxitSuggestedTermJobService","ValidateAnnotation")
 
-conn.add_software_parameter("cytomine_predict_term",software.id,"ListDomain",None,False,10,False,"/api/project/$currentProject$/term.json","name","name")
-conn.add_software_parameter("cytomine_positive_predict_term",software.id,"ListDomain",None,True,10,False,"/api/project/$currentProject$/term.json","name","name")
-conn.add_software_parameter("cytomine_users_annotation",software.id,"ListDomain",None,False,20,False,"/api/project/$currentProject$/user.json","username","username")
-conn.add_software_parameter("cytomine_imagegroup",software.id,"ListDomain",None,False,30,False,"/api/project/$currentProject$/imagegroup.json","id","id")
+        SoftwareParameter("cytomine_users_annotation", type="ListDomain", id_software=software.id, index=700, default_value=None,
+                          uri="/api/project/$currentProject$/user.json",uri_sort_attribut="username",uri_print_attribut="username").save()
+        SoftwareParameter("cytomine_imagegroup", type="ListDomain", id_software=software.id, index=800, default_value=None,
+                          uri="/api/project/$currentProject$/imagegroup.json",uri_sort_attribut="id",uri_print_attribut="id").save()
 
-conn.add_software_parameter("forest_n_estimators", software.id, "Number", 10, True, 1100, False)
-conn.add_software_parameter("forest_min_samples_split", software.id, "Number", 2, True, 1300, False)
-conn.add_software_parameter("forest_max_features", software.id, "String", 'auto', True, 1400, False)
+        # running parameters
+        SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000, required=True).save()
 
-conn.add_software_parameter("pyxit_save_to", software.id, "String", "/tmp", False, 1500, False)
+        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1200, required=True).save()
+        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300, required=True).save()
+        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400, required=True).save()
 
-#add software to a given project
-addSoftwareProject = conn.add_software_project(id_project,software.id)
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1:])
+
+
+#import cytomine
+#import sys
+#
+##Connect to cytomine, edit connection values
+#cytomine_host="demo.cytomine.be"
+#cytomine_public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5"
+#cytomine_private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb"
+#id_project=28146931
+#
+##Connection to Cytomine Core
+#conn = cytomine.Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_path = '/api/', working_path = '/tmp/', verbose= False)
+#
+##define software parameter template
+#
+#software = conn.add_software("Feature_Selection", "pyxitSuggestedTermJobService","ValidateAnnotation")
+#
+#conn.add_software_parameter("cytomine_predict_term",software.id,"ListDomain",None,False,10,False,"/api/project/$currentProject$/term.json","name","name")
+#conn.add_software_parameter("cytomine_positive_predict_term",software.id,"ListDomain",None,True,10,False,"/api/project/$currentProject$/term.json","name","name")
+#conn.add_software_parameter("cytomine_users_annotation",software.id,"ListDomain",None,False,20,False,"/api/project/$currentProject$/user.json","username","username")
+#conn.add_software_parameter("cytomine_imagegroup",software.id,"ListDomain",None,False,30,False,"/api/project/$currentProject$/imagegroup.json","id","id")
+#
+#conn.add_software_parameter("forest_n_estimators", software.id, "Number", 10, True, 1100, False)
+#conn.add_software_parameter("forest_min_samples_split", software.id, "Number", 2, True, 1300, False)
+#conn.add_software_parameter("forest_max_features", software.id, "String", 'auto', True, 1400, False)
+#
+#conn.add_software_parameter("pyxit_save_to", software.id, "String", "/tmp", False, 1500, False)
+#
+##add software to a given project
+#addSoftwareProject = conn.add_software_project(id_project,software.id)

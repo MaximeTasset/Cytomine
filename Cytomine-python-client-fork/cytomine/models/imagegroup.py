@@ -118,13 +118,16 @@ class ImageGroupHDF5(Model):
         return spectrum.reshape((width, height, depth))
 
     def rectangle_all(self, x, y, width, height):
-        uri = "imagegroupHDF5/{}/{}/{}/{}/{}/rectangle.json".format(self.id, x, y, width, height)
+        uri = "imagegroupHDF5/{}/{}/{}/{}/{}/rectangle.json".format(self.id, int(x), int(y), int(width), int(height))
 
         try:
           val = Cytomine.get_instance().get(uri)
           return val["collection"]
         except TypeError:
-          print(val)
+          from time import localtime, strftime,sleep
+          print("TIME : %s" %strftime("%Y-%m-%d %H:%M:%S", localtime()))
+          print(uri)
+          sleep(10)
           #something wrong append
           raise socket.error
 

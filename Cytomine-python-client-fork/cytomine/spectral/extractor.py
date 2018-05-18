@@ -211,7 +211,7 @@ class Extractor:
                                 sp += im.rectangle_all(w,h,sizew,sizeh)
                           except socket.error :
                             print(socket.error)
-                            time.sleep(1)
+                            time.sleep(5)
                             if sizew > 1 and sizeh > 1:
                               requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
                             else:
@@ -219,7 +219,7 @@ class Extractor:
                             continue
                           except socket.timeout :
                             print(socket.timeout)
-                            time.sleep(1)
+                            time.sleep(5)
                             if sizew > 1 and sizeh > 1:
                               requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
                             else:
@@ -359,6 +359,39 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
             rect.append((w,h,sizew,sizeh))
             rois.append((round(maxx),round(maxy),sizew,sizeh,image_height))
     return annot,polys,rois,rect
+
+def coordonatesToPolygons(coordonates,nb_job=1):
+    """
+    coordonates: a list of tuple (x,y) with x,y integers
+    return a MultiPolygon that contains all points that are in a valid polygon
+    (ie non-zeros area (or more than one pixel width))
+    """
+    from shapely.geometry import Polygon,MultiPolygon
+    from shapely.ops import cascaded_union
+    nb_job = max(1,nb_job)
+
+    #converts points to polygon
+
+    polys = [Polygon([(x-.5,y-.5),
+                      (x-.5,y+.5),
+                      (x+.5,y+.5),
+                      (x+.5,y-.5)])for x,y in coordonates]
+    if nb_job == 1:
+        return cascaded_union(polys)
+    else:
+        from multiprocessing import Pool
+        pool = Pool(nb_job)
+
+        lim = len(coordonates)/nb_job
+        polyss = [polys[int(i*lim):int((i+1)*lim)] for i in range(nb_job)]
+        print("ok")
+        results = pool.map(cascaded_union,polyss)
+        print("almost done")
+        multipolys = MultiPolygon()
+        for mp in results:
+            multipolys = multipolys.union(mp)
+        return multipolys.buffer(-.5)
+
 
 def splitRect(rect,maxw,maxh):
 

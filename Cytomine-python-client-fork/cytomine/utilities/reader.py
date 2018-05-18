@@ -348,7 +348,7 @@ def splitRect(rect,maxw,maxh):
         currh = h
         while currh < limith:
             tmph = min(maxh,abs(limith-currh))
-            rects.append((currw,currh,tmpw,tmph))
+            rects.append((int(currw),int(currh),int(tmpw),int(tmph)))
             currh += tmph
         currw += tmpw
     return rects
@@ -369,14 +369,19 @@ class CytomineSpectralReader(Reader):
         image = ImageInstance(id=images[0].image).fetch()
         #width and height of the imagegroup and the number of channel
         self.dimension = (image.width,image.height,len(images))
+        self.first_id = image.id
+        self.setBounds(bounds)
 
-        self.bounds = bounds
-        self.window_position = [bounds.x,bounds.y]
         self.tile_size = tile_size
         self.overlap = overlap
         self.pool = ThreadPool(num_thread)
         self.num_thread = num_thread
         self.results = deque()
+
+    def setBounds(self,bounds):
+        self.bounds = bounds
+        if bounds is not None:
+          self.window_position = [bounds.x,bounds.y]
 
     def reverseHeight(self,coord):
         #allow to switch from the coordonate system from the Rest API to the Cytomine one.
@@ -399,6 +404,7 @@ class CytomineSpectralReader(Reader):
           while len(requests):
             (w,h,sizew,sizeh) = requests.pop()
 #            w,h = self.reverseHeight((w,h))
+            w,h,sizew,sizeh =int(w),int(h),int(sizew),int(sizeh)
             try:
               if sp is None:
                   sp = im.rectangle_all(w,h,sizew,sizeh)
@@ -406,22 +412,22 @@ class CytomineSpectralReader(Reader):
                   sp += im.rectangle_all(w,h,sizew,sizeh)
             except socket.error :
               print(socket.error)
-              time.sleep(1)
+              time.sleep(5)
               if sizew > 1 and sizeh > 1:
                 #restore the cytomine coordonates
 #                w,h = self.reverseHeight((w,h))
-                requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                requests.extend(splitRect((w,h,sizew,sizeh),int(sizew/2),int(sizeh/2)))
               else:
 #                w,h = self.reverseHeight((w,h))
                 requests.append((w,h,sizew,sizeh))
               continue
             except socket.timeout :
               print(socket.timeout)
-              time.sleep(1)
+              time.sleep(5)
               if sizew > 1 and sizeh > 1:
                 #restore the cytomine coordonates
 #                w,h = self.reverseHeight((w,h))
-                requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                requests.extend(splitRect((w,h,sizew,sizeh),int(sizew/2),int(sizeh/2)))
               else:
 #                w,h = self.reverseHeight((w,h))
                 requests.append((w,h,sizew,sizeh))
@@ -437,7 +443,7 @@ class CytomineSpectralReader(Reader):
         else:
             self.results.appendleft((self.pool.map(getRect,rects),False,tuple(tile)))
 
-    def getResult(self,all_coord=True):
+    def getResult(self,all_coord=True,in_list=False):
 
         #self.results a queue of (map/map_result,is_async,tile_coord)
         if len(self.results):
@@ -455,19 +461,28 @@ class CytomineSpectralReader(Reader):
                         break
                 if not num_spectra:
                     return
-                image = np.zeros((result[2][2],result[2][3],num_spectra),dtype=np.uint8)
-                if all_coord:
-                    image_coord = np.zeros((result[2][2],result[2][3],2))
+                if not in_list:
+                    image = np.zeros((result[2][2],result[2][3],num_spectra),dtype=np.uint8)
+                    if all_coord:
+
+                        image_coord = np.zeros((result[2][2],result[2][3],2))
+                    else:
+                        image_coord = np.asarray(result[2])
                 else:
-                    image_coord = np.asarray(result[2])
+                    image = []
+                    image_coord = []
+
                 for collection in list_collections:
                     for spectra in collection:
-                        #return to the cytomine coordonates system
-#                        spectra['pxl'] = self.reverseHeight(spectra['pxl'])
-                        position = (abs(result[2][0] - spectra['pxl'][0]),abs(result[2][1] - spectra['pxl'][1]))
-                        image[position] = spectra['spectra']
-                        if all_coord:
-                            image_coord[position] = spectra['pxl']
+
+                        if not in_list:
+                            position = (abs(result[2][0] - spectra['pxl'][0]),abs(result[2][1] - spectra['pxl'][1]))
+                            image[position] = spectra['spectra']
+                            if all_coord:
+                                image_coord[position] = spectra['pxl']
+                        else:
+                            image_coord.append(spectra['pxl'])
+                            image.append(spectra['spectra'])
 
                 return image,image_coord
 
