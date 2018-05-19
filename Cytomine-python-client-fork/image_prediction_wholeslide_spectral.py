@@ -44,7 +44,6 @@ from time import localtime, strftime
 
 
 from shapely.geometry import Polygon,MultiPolygon
-from shapely.ops import cas
 import numpy as np
 
 import cytomine
@@ -53,6 +52,10 @@ from cytomine.spectral.extractor import coordonatesToPolygons
 
 from cytomine.models.user import User,CurrentUser
 from cytomine.models.software import Job
+
+from multiprocessing import Pool
+
+from shapely import wkt
 
 #Parameter values are now set through command-line
 parameters = {
@@ -294,9 +297,12 @@ def main(argv):
     job.update()
 
     stop = False
-    while not stop:
 
-      for i in range(5):
+    iterate = 5
+    pool = Pool(4)
+
+    while not stop:
+      for i in range(iterate):
         reader.read(async=True)
         if not reader.next():
           stop = True
@@ -304,9 +310,9 @@ def main(argv):
       fetch = []
       coords = []
       if not stop:
-        it = 5
+        it = iterate
       else:
-        it = 10
+        it = iterate*2
       for i in range(it):
         result = reader.getResult(all_coord=True,in_list=True)
         if result is None: #that means no results left to fetch
@@ -320,16 +326,42 @@ def main(argv):
 
       #get the coordonate of the pxl that correspond to the request
       coord = [reader.reverseHeight(coord[index[0]]) for index in np.argwhere(predictions==parameters['cytomine_predict_term'])]
-      results = results.union(coordonatesToPolygons(coord,nb_job=parameters['nb_jobs']))
+      if len(coord):
+        results = results.union(coordonatesToPolygons(coord,nb_job=parameters['nb_jobs'],pool,False))
+
+    reader.first_id
+    from cytomine.models.annotation import Annotation
+    Annotation()
+    results = results.buffer(-.5).simplify(1,False)
+
+    job.statusComment = "Uploading of the annotations on the first image of the imagegroup"
+    job.status = job.RUNNING
+    job.progress = 90
+    job.update()
 
 
+    tests = [np.ceil,np.floor]
+
+    for pp in results:
+        ext = []
+        t = pp.buffer(0.01)
+        for point in pp.exterior.coords:
+            ok = []
+            for t1 in tests:
+                for t2 in tests:
+                    x,y = int(t1(point[0])),int(t2(point[1]))
+                    if t.contains(Point((x,y))):
+                        ok.append((x,y))
+            if len(ok):
+                ext.append(min(ok,key=lambda x: np.sqrt((x[0]+point[0])**2+(x[1]+point[1])**2)))
+        #actual annotation's polygon
+        poly = Polygon(ext).buffer(0)
 
 
     job.statusComment = "Finish Job.."
     job.status = job.TERMINATED
     job.progress = 100
     job.update()
-
 
     sys.exit()
 

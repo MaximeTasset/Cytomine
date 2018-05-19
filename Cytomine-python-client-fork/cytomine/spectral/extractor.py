@@ -360,15 +360,14 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
             rois.append((round(maxx),round(maxy),sizew,sizeh,image_height))
     return annot,polys,rois,rect
 
-def coordonatesToPolygons(coordonates,nb_job=1):
+def coordonatesToPolygons(coordonates,nb_job=1,pool=None,trim=True):
     """
     coordonates: a list of tuple (x,y) with x,y integers
-    return a MultiPolygon that contains all points that are in a valid polygon
+    return a MultiPolygon that contains all points that are in a valid polygon (if trim == True)
     (ie non-zeros area (or more than one pixel width))
     """
     from shapely.geometry import Polygon,MultiPolygon
     from shapely.ops import cascaded_union
-    nb_job = max(1,nb_job)
 
     #converts points to polygon
 
@@ -376,21 +375,33 @@ def coordonatesToPolygons(coordonates,nb_job=1):
                       (x-.5,y+.5),
                       (x+.5,y+.5),
                       (x+.5,y-.5)])for x,y in coordonates]
+    nb_job = max(1,nb_job)
+
     if nb_job == 1:
-        return cascaded_union(polys)
+        multipolys = cascaded_union(polys)
     else:
-        from multiprocessing import Pool
-        pool = Pool(nb_job)
+
+        if pool is None:
+            from multiprocessing import Pool
+            pool = Pool(nb_job)
+            toclose = True
+        else:
+            toclose = False
 
         lim = len(coordonates)/nb_job
         polyss = [polys[int(i*lim):int((i+1)*lim)] for i in range(nb_job)]
-        print("ok")
+
         results = pool.map(cascaded_union,polyss)
-        print("almost done")
+        if toclose:
+          pool.close()
         multipolys = MultiPolygon()
         for mp in results:
             multipolys = multipolys.union(mp)
+    if trim:
         return multipolys.buffer(-.5)
+    else:
+        return multipolys
+
 
 
 def splitRect(rect,maxw,maxh):
