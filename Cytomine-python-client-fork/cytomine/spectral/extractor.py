@@ -394,15 +394,28 @@ def coordonatesToPolygons(coordonates,nb_job=1,pool=None,trim=True):
         results = pool.map(cascaded_union,polyss)
         if toclose:
           pool.close()
-        multipolys = MultiPolygon()
-        for mp in results:
-            multipolys = multipolys.union(mp)
+        multipolys = cascaded_union(results)
     if trim:
         return multipolys.buffer(-.5)
     else:
         return multipolys
 
+def polygonToAnnotation(polygon):
+    tests = [np.ceil,np.floor]
+    t = polygon.buffer(0.01)
+    ext = []
+    for point in polygon.exterior.coords:
+      ok = []
+      for t1 in tests:
+        for t2 in tests:
+          x,y = int(t1(point[0])),int(t2(point[1]))
+          if t.contains(Point((x,y))):
+            ok.append((x,y))
+      if len(ok):
+        ext.append(min(ok,key=lambda x: np.sqrt((x[0]+point[0])**2+(x[1]+point[1])**2)))
 
+    #actual annotation's polygon
+    return Polygon(ext).buffer(0)
 
 def splitRect(rect,maxw,maxh):
 

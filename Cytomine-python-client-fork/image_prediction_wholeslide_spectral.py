@@ -48,7 +48,7 @@ import numpy as np
 
 import cytomine
 from cytomine.utilities.reader import Bounds, CytomineSpectralReader
-from cytomine.spectral.extractor import coordonatesToPolygons
+from cytomine.spectral.extractor import coordonatesToPolygons,polygonToAnnotation
 
 from cytomine.models.user import User,CurrentUser
 from cytomine.models.software import Job
@@ -114,22 +114,13 @@ def main(argv):
     p.add_option('--cytomine_host', type="string", default = 'beta.cytomine.be', dest="cytomine_host", help="The Cytomine host (eg: beta.cytomine.be, localhost:8080)")
     p.add_option('--cytomine_public_key', type="string", default = '', dest="cytomine_public_key", help="Cytomine public key")
     p.add_option('--cytomine_private_key',type="string", default = '', dest="cytomine_private_key", help="Cytomine private key")
-    p.add_option('--cytomine_base_path', type="string", default = '/api/', dest="cytomine_base_path", help="Cytomine base path")
-    p.add_option('--cytomine_id_software', type="int", dest="cytomine_id_software", help="The Cytomine software identifier")
-    p.add_option('--cytomine_working_path', default="/tmp/", type="string", dest="cytomine_working_path", help="The working directory (eg: /tmp)")
-    p.add_option('--cytomine_id_project', type="int", dest="cytomine_id_project", help="The Cytomine project identifier")
-    p.add_option('--cytomine_union', type="string", default="0", dest="cytomine_union", help="Turn on union of geometries")
-    p.add_option('--cytomine_postproc', type="string", default="0", dest="cytomine_postproc", help="Turn on postprocessing")
 
-    p.add_option('--cytomine_min_size', type="int", default=0, dest="cytomine_min_size", help="minimum size (area) of annotations")
-    p.add_option('--cytomine_max_size', type="int", default=10000000000, dest="cytomine_max_size", help="maximum size (area) of annotations")
+    p.add_option('--cytomine_id_software', type="int", dest="cytomine_id_software", help="The Cytomine software identifier")
+    p.add_option('--cytomine_id_project', type="int", dest="cytomine_id_project", help="The Cytomine project identifier")
+
 
     p.add_option('-i', '--cytomine_id_imagegroup', type='int', dest='cytomine_id_imagegroup', help="imagegroup id from cytomine")
     p.add_option('-t', '--cytomine_tile_size', type='int', dest='cytomine_tile_size', help="sliding tile size")
-
-    p.add_option('--cytomine_union_min_length', type='int', default=5, dest='cytomine_union_min_length', help="union")
-
-    p.add_option('--cytomine_union_area', type='int', default=5, dest='cytomine_union_area', help="union")
 
     p.add_option('-j', '--nb_jobs', type='int', dest='nb_jobs', help="number of parallel jobs")
     p.add_option('--startx', type='int', default=0, dest='cytomine_startx', help="start x position")
@@ -137,14 +128,12 @@ def main(argv):
     p.add_option('--endx', type='int', dest='cytomine_endx', help="end x position")
     p.add_option('--endy', type='int', dest='cytomine_endy', help="end y position")
     p.add_option('--cytomine_predict_term', type='int', dest='cytomine_predict_term', help="term id of predicted term (binary mode)")
-    p.add_option('--cytomine_roi_term', type='string', dest='cytomine_roi_term', help="term id of region of interest where to count)")
-
-   p.add_option('--cytomine_reviewed_roi', type='string', default="0", dest="cytomine_reviewed_roi", help="Use reviewed roi only")
 
     p.add_option('--pyxit_target_width', type='int', dest='pyxit_target_width', help="pyxit subwindows width")
     p.add_option('--pyxit_target_height', type='int', dest='pyxit_target_height', help="pyxit subwindows height")
-    p.add_option('--cytomine_predict_step', type='int', dest='cytomine_predict_step', help="pyxit step between successive subwindows")
     p.add_option('--pyxit_save_to', type='string', dest='pyxit_save_to', help="pyxit segmentation model file") #future: get it from server db
+
+    p.add_option('--cytomine_overlap', type='int', dest='cytomine_overlap', help="reader overlap")
 
     p.add_option('--pyxit_post_classification', type="string", default="0", dest="pyxit_post_classification", help="pyxit post classification of candidate annotations")
 
@@ -158,27 +147,14 @@ def main(argv):
     parameters['cytomine_host'] = options.cytomine_host
     parameters['cytomine_public_key'] = options.cytomine_public_key
     parameters['cytomine_private_key'] = options.cytomine_private_key
-    parameters['cytomine_base_path'] = options.cytomine_base_path
-    parameters['cytomine_working_path'] = options.cytomine_working_path
+
     parameters['cytomine_base_path'] = options.cytomine_base_path
     parameters['cytomine_id_project'] = options.cytomine_id_project
     parameters['cytomine_id_software'] = options.cytomine_id_software
     parameters['cytomine_predict_term'] = options.cytomine_predict_term
     parameters['model_id_job'] = 0
-    if options.cytomine_roi_term:
-        parameters['cytomine_roi_term'] = map(int,options.cytomine_roi_term.split(','))
-    parameters['cytomine_reviewed_roi'] = str2bool(options.cytomine_reviewed_roi)
-    parameters['cytomine_union'] = str2bool(options.cytomine_union)
-    parameters['cytomine_postproc'] = str2bool(options.cytomine_postproc)
-    parameters['cytomine_mask_internal_holes'] = str2bool(options.cytomine_mask_internal_holes)
-    parameters['cytomine_count'] = str2bool(options.cytomine_count)
-    if options.cytomine_min_size:
-        parameters['cytomine_min_size'] = options.cytomine_min_size
-    if options.cytomine_max_size:
-        parameters['cytomine_max_size'] = options.cytomine_max_size
-    parameters['cytomine_predict_step'] = options.cytomine_predict_step
-    parameters['pyxit_save_to'] = options.pyxit_save_to
 
+    parameters['pyxit_save_to'] = options.pyxit_save_to
 
     parameters['pyxit_nb_jobs'] = options.pyxit_nb_jobs
     parameters['cytomine_nb_jobs'] = options.pyxit_nb_jobs
@@ -186,6 +162,7 @@ def main(argv):
     parameters['cytomine_id_imagegroup'] = options.cytomine_id_imagegroup
 
     parameters['cytomine_tile_size'] = options.cytomine_tile_size
+    parameters['cytomine_overlap'] = options.cytomine_overlap
 
     parameters['cytomine_startx'] = options.cytomine_startx
     parameters['cytomine_starty'] = options.cytomine_starty
@@ -267,7 +244,7 @@ def main(argv):
     reader = CytomineSpectralReader(id_imagegroup,
                                     bounds = None,
                                     tile_size = Bounds(0,0,parameters['cytomine_tile_size'],parameters['cytomine_tile_size']),
-                                    overlap=0,num_thread=parameters['nb_jobs'])
+                                    overlap=parameters['cytomine_overlap'],num_thread=parameters['cytomine_nb_jobs'])
 
     x,y = reader.reverseHeight((parameters['cytomine_startx'],parameters['cytomine_endy']))
 
@@ -299,7 +276,7 @@ def main(argv):
     stop = False
 
     iterate = 5
-    pool = Pool(4)
+    pool = Pool(parameters['nb_jobs'])
 
     while not stop:
       for i in range(iterate):
@@ -322,6 +299,8 @@ def main(argv):
           fetch.extend(spectras)
           coords.extend(coord.flatten)
       fetch = np.asarray(fetch)
+
+      #make prediction here
       predictions = pyxit.predict(fetch)
 
       #get the coordonate of the pxl that correspond to the request
@@ -334,35 +313,30 @@ def main(argv):
     Annotation()
     results = results.buffer(-.5).simplify(1,False)
 
-    job.statusComment = "Uploading of the annotations on the first image of the imagegroup"
+    job.statusComment = "Converting ROI to polygon"
     job.status = job.RUNNING
     job.progress = 90
     job.update()
 
 
-    tests = [np.ceil,np.floor]
+    amp = pool.map(polygonToAnnotation,[p for p in resuls])
 
-    for pp in results:
-        ext = []
-        t = pp.buffer(0.01)
-        for point in pp.exterior.coords:
-            ok = []
-            for t1 in tests:
-                for t2 in tests:
-                    x,y = int(t1(point[0])),int(t2(point[1]))
-                    if t.contains(Point((x,y))):
-                        ok.append((x,y))
-            if len(ok):
-                ext.append(min(ok,key=lambda x: np.sqrt((x[0]+point[0])**2+(x[1]+point[1])**2)))
-        #actual annotation's polygon
-        poly = Polygon(ext).buffer(0)
+    job.statusComment = "Uploading of the annotations on the first image of the imagegroup"
+    job.status = job.RUNNING
+    job.progress = 95
+    job.update()
 
+    for p in amp:
+      Annotation(p,reader.first_id,
+                 id_terms=parameters['cytomine_predict_term'],
+                 id_project=parameters['cytomine_id_project']).save()
 
     job.statusComment = "Finish Job.."
     job.status = job.TERMINATED
     job.progress = 100
     job.update()
 
+    pool.close()
     sys.exit()
 
 
