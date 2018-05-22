@@ -39,37 +39,64 @@ class Collection(MutableSequence):
         self._filters = filters if filters is not None else {}
 
         self._total = 0  # total number of resources
-        self._total_pages = 0  # total number of pages
+        self._total_pages = None  # total number of pages
 
         self.max = max
         self.offset = offset
 
-    def fetch(self, max=None, offset=None):
-        if max:
-            self.max = max
-
-        if offset:
-            self.offset = offset
-
+    def _fetch(self, append_mode=False):
         if len(self._filters) == 0 and None not in self._allowed_filters:
             raise ValueError("This collection cannot be fetched without a filter.")
 
-        return Cytomine.get_instance().get_model(self, self.parameters)
+        return Cytomine.get_instance().get_collection(self, self.parameters, append_mode)
 
-    def fetch_with_filter(self, key, value, max=None, offset=None):
+    def fetch(self, max=None):
+        """
+        Fetch all collection by pages of `max` items.
+        Parameters
+        ----------
+        max : int, None (optional)
+            The number of item per page. If None, retrieve all collection.
+
+        Returns
+        -------
+        self    Collection, the fetched collection
+        """
+        if max:
+            self.max = max
+            n_pages = 0
+            while not self._total_pages or n_pages < self._total_pages:
+                self.fetch_next_page(True)
+                n_pages += 1
+
+            return self
+        else:
+            return self._fetch()
+
+    def fetch_with_filter(self, key, value, max=None):
         self._filters[key] = value
-        return self.fetch(max, offset)
+        return self.fetch(max)
 
-    def fetch_next_page(self):
+    def fetch_next_page(self, append_mode=False):
         self.offset = min(self._total, self.offset + self.max)
-        return self.fetch()
+        return self._fetch(append_mode)
 
     def fetch_previous_page(self):
         self.offset = max(0, self.offset - self.max)
-        return self.fetch()
+        return self._fetch()
 
-    def populate(self, attributes):
-        self._data = [self._model().populate(instance) for instance in attributes["collection"]]
+    def save(self):
+        return Cytomine.get_instance().post_collection(self)
+
+    def to_json(self, **dump_parameters):
+        return "[{}]".format(",".join([d.to_json(**dump_parameters) for d in self._data]))
+
+    def populate(self, attributes, append_mode=False):
+        data = [self._model().populate(instance) for instance in attributes["collection"]]
+        if append_mode:
+            self._data += data
+        else:
+            self._data = data
         self._total = attributes["size"]
         self._total_pages = attributes["totalPages"]
         return self
@@ -105,14 +132,16 @@ class Collection(MutableSequence):
     def callback_identifier(self):
         return self._model.__name__.lower()
 
-    def uri(self):
-        if len(self.filters) > 1:
-            raise ValueError("More than 1 filter not allowed by default.")
+    def uri(self, without_filters=False):
+        uri = ""
+        if not without_filters:
+            if len(self.filters) > 1:
+                raise ValueError("More than 1 filter not allowed by default.")
 
-        uri = "/".join(["{}/{}".format(key, value) for key, value in six.iteritems(self.filters)
-                        if key in self._allowed_filters])
-        if len(uri) > 0:
-            uri += "/"
+            uri = "/".join(["{}/{}".format(key, value) for key, value in six.iteritems(self.filters)
+                            if key in self._allowed_filters])
+            if len(uri) > 0:
+                uri += "/"
 
         return "{}{}.json".format(uri, self.callback_identifier)
 
@@ -170,12 +199,16 @@ class DomainCollection(Collection):
         self._domainIdent = None
         self._obj = object
 
-    def uri(self):
+    def uri(self, without_filters=False):
         return "domain/{}/{}/{}".format(self._domainClassName, self._domainIdent,
-                                        super(DomainCollection, self).uri())
+                                        super(DomainCollection, self).uri(without_filters))
 
-    def populate(self, attributes):
-        self._data = [self._model(self._object).populate(instance) for instance in attributes["collection"]]
+    def populate(self, attributes, append_mode=False):
+        data = [self._model(self._object).populate(instance) for instance in attributes["collection"]]
+        if append_mode:
+            self._data += data
+        else:
+            self._data = data
         return self
 
     @property

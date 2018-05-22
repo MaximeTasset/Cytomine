@@ -31,7 +31,6 @@ from cytomine.models.collection import Collection
 from cytomine.models.model import Model
 
 import numpy as np
-import socket
 
 
 class ImageGroup(Model):

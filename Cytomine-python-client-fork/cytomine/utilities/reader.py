@@ -29,9 +29,9 @@ import numpy
 import threading
 import copy
 
-import queue as Queue
+import Queue
 from PIL import Image
-from io import StringIO
+from StringIO import StringIO
 
 from multiprocessing.pool import ThreadPool
 import numpy as np
