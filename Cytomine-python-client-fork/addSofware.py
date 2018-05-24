@@ -26,6 +26,7 @@ cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
+save_path = "/tmp"
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
@@ -84,7 +85,7 @@ if __name__ == "__main__":
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
-                   "--save_path","/tmp"]) # complete path where the 'results.csv' will be saved
+                   "--save_path",save_path]) # complete path where the 'results.csv' will be saved
       try:
         job = main_feature(argv)
       finally:
