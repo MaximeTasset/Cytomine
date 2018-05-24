@@ -23,9 +23,9 @@ from cytomine import Cytomine
 from cytomine.models import Software, SoftwareParameter,SoftwareProject
 
 cytomine_host="demo.cytomine.be"
-cytomine_public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5"
-cytomine_private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb"
-id_project=28146931
+cytomine_public_key="XXX"
+cytomine_private_key="XXX"
+id_project= XXX
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
@@ -65,7 +65,22 @@ def main(argv):
 
 if __name__ == "__main__":
     import sys
-    main(sys.argv[1:])
+    import logging
+    if len(sys.argv[1:]):
+      software = main(sys.argv[1:])
+    else:
+      argv = ['--cytomine_host',cytomine_host,
+              "--cytomine_public_key",cytomine_public_key,
+              "--cytomine_private_key",cytomine_private_key]
+      software = main(argv)
+      from feature_selection import main as main_feature
+      argv.extend(["--cytomine_id_project",str(id_project),
+                   "--cytomine_id_software",str(software.id),
+                   "--cytomine_predict_term",'', #list of the terms names used for the feature selection format 'name1,name2,name3' (note: if '', all terms will be used)
+                   "--cytomine_positive_predict_term",'', #list of the terms names that will be merge format 'name1,name2,name3' (note: if '', no merge)
+                   "--cytomine_users_annotation",'', #the annotations which have as user, one in the list will be used, not the others (note: if '' all annotation will be used)
+                   "--cytomine_imagegroup",'', #list of the project imagegroup's id that will be used (note: if '' all imagegroup will be used)
+                   "--n_jobs",str(4),
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
