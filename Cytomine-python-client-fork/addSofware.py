@@ -66,6 +66,19 @@ def main(argv):
 if __name__ == "__main__":
     import sys
     main(sys.argv[1:])
+                   "--forest_max_features","auto",
+                   "--forest_n_estimators",str(10),
+                   "--forest_min_samples_split",str(2),
+                   "--save_path","/tmp"]) # complete path where the 'results.csv' will be saved
+      try:
+        job = main_feature(argv)
+      finally:
+
+        with Cytomine(host="demo.cytomine.be", public_key=cytomine_public_key, private_key=cytomine_private_key,
+                  verbose=logging.INFO) as cytomine:
+                      software.delete()
+
+
 
 
 #import cytomine
