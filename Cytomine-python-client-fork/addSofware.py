@@ -22,6 +22,10 @@ __copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http:/
 from cytomine import Cytomine
 from cytomine.models import Software, SoftwareParameter,SoftwareProject
 
+cytomine_host="demo.cytomine.be"
+cytomine_public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5"
+cytomine_private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb"
+id_project=28146931
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
@@ -29,21 +33,21 @@ def main(argv):
                             service_name="pyxitSuggestedTermJobService",
                             result_name="ValidateAnnotation").save()
 
-        SoftwareParameter("cytomine_id_software", type="Number", id_software=software.id,
-                          index=100, set_by_server=True, required=True).save()
-        SoftwareParameter("cytomine_id_project", type="Number", id_software=software.id,
-                          index=100, set_by_server=True, required=True).save()
+#        SoftwareParameter("cytomine_id_software", type="Number", id_software=software.id,
+#                          index=100, set_by_server=True, required=True).save()
+#        SoftwareParameter("cytomine_id_project", type="Number", id_software=software.id,
+#                          index=100, set_by_server=True, required=True).save()
 
         # filtering annotations
-        SoftwareParameter("cytomine_predict_term", type="ListDomain", id_software=software.id, index=500, default_value=None,
+        SoftwareParameter("cytomine_predict_term", type="ListDomain", id_software=software.id, index=500, default_value='',
                           uri="/api/project/$currentProject$/term.json",uri_sort_attribut="name",uri_print_attribut="name").save()
-        SoftwareParameter("cytomine_positive_predict_term", type="ListDomain", id_software=software.id, index=600, default_value=None,
+        SoftwareParameter("cytomine_positive_predict_term", type="ListDomain", id_software=software.id, index=600, default_value='',
                           uri="/api/project/$currentProject$/term.json",uri_sort_attribut="name",uri_print_attribut="name").save()
 
 
-        SoftwareParameter("cytomine_users_annotation", type="ListDomain", id_software=software.id, index=700, default_value=None,
+        SoftwareParameter("cytomine_users_annotation", type="ListDomain", id_software=software.id, index=700, default_value='',
                           uri="/api/project/$currentProject$/user.json",uri_sort_attribut="username",uri_print_attribut="username").save()
-        SoftwareParameter("cytomine_imagegroup", type="ListDomain", id_software=software.id, index=800, default_value=None,
+        SoftwareParameter("cytomine_imagegroup", type="ListDomain", id_software=software.id, index=800, default_value='',
                           uri="/api/project/$currentProject$/imagegroup.json",uri_sort_attribut="id",uri_print_attribut="id").save()
 
         # running parameters
@@ -55,7 +59,7 @@ def main(argv):
         SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600).save()
 
         print(software.id)
-        SoftwareProject(software.id,28146931).save()
+        SoftwareProject(software.id,id_project).save()
         return software
 
 
