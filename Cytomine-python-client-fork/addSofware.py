@@ -33,8 +33,6 @@ def main(argv):
                           index=100, set_by_server=True, required=True).save()
         SoftwareParameter("cytomine_id_project", type="Number", id_software=software.id,
                           index=100, set_by_server=True, required=True).save()
-        SoftwareParameter("cytomine_users_annotation", type="Number", id_software=software.id, default_value=software.id,
-                          index=200, set_by_server=True, required=True).save()
 
         # filtering annotations
         SoftwareParameter("cytomine_predict_term", type="ListDomain", id_software=software.id, index=500, default_value=None,
@@ -49,12 +47,12 @@ def main(argv):
                           uri="/api/project/$currentProject$/imagegroup.json",uri_sort_attribut="id",uri_print_attribut="id").save()
 
         # running parameters
-        SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000, required=True).save()
+        SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000).save()
 
-        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1200, required=True).save()
-        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300, required=True).save()
-        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400, required=True).save()
-        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600, required=True).save()
+        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1200).save()
+        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300).save()
+        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400).save()
+        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600).save()
 
         print(software.id)
         SoftwareProject(software.id,28146931).save()
