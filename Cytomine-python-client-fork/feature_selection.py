@@ -5,12 +5,12 @@ Created on Wed Mar 07 00:25:54 2018
 @author: Maxime
 """
 
-import os, optparse
+import os
 from cytomine import Cytomine
 
 from os.path import join
 from cytomine.spectral import Extractor
-from cytomine.models import *
+from cytomine.models import TermCollection,UserCollection
 from cytomine import CytomineJob
 
 parameters = {
@@ -31,12 +31,8 @@ parameters = {
 }
 
 def main(argv):
-  # Define command line options
-  print("Main function")
-
   with CytomineJob.from_cli(argv) as cj:
 
-      id_software = cj.parameters.cytomine_id_software
       id_project = cj.parameters.cytomine_id_project
 
       save_path = cj.parameters.save_path
@@ -49,69 +45,55 @@ def main(argv):
       n_estimators = cj.parameters.forest_n_estimators
       min_samples_split = cj.parameters.forest_min_samples_split
 
-      if cj.parameters.cytomine_predict_term is not None:
+      if cj.parameters.cytomine_predict_term is not None and  cj.parameters.cytomine_predict_term != '':
           terms_name = cj.parameters.cytomine_predict_term.split(',')
           predict_terms_list = [term.id for term in cj.get_project_terms(id_project) if str(term.name) in terms_name]
       else:
           predict_terms_list = [term.id for term in TermCollection(filters={'project':id_project}).fetch()]
 
-      if cj.parameters.cytomine_positive_predict_term is not None:
-          positive_predict_terms_list = cj.parameters.cytomine_predict_term.split(',')
+      if cj.parameters.cytomine_positive_predict_term is not None and cj.parameters.cytomine_positive_predict_term != '':
+          terms_name = cj.parameters.cytomine_positive_predict_term.split(',')
+          positive_predict_terms_list = [term.id for term in cj.get_project_terms(id_project) if str(term.name) in terms_name and term.id in predict_terms_list]
+          if not len(positive_predict_terms_list):
+              positive_predict_terms_list = None
       else:
           positive_predict_terms_list = None
 
       if cj.parameters.cytomine_users_annotation is not None:
-          parameters['cytomine_users_annotation'] = cj.parameters.cytomine_users_annotation.split(',')
-          parameters['cytomine_users_annotation'] = [user.id for user in UserCollection(filters={"project": id_project}).fetch() if user.username in  parameters['cytomine_users_annotation']]
+          users_annotation = cj.parameters.cytomine_users_annotation.split(',')
+          users_annotation = [user.id for user in UserCollection(filters={"project": id_project}).fetch() if user.username in  users_annotation]
       else:
-          parameters['cytomine_users_annotation'] = None
+          users_annotation = None
 
-      parameters['cytomine_imagegroup'] = options.cytomine_imagegroup.split(',')
-
-      #Create a new userjob if cjected as human user
-
-      current_user = CurrentUser().fetch()
-      run_by_user_job = False
-      if current_user.algo==False:
-          print("adduserJob...")
-          from cytomine.models.user import User
-          from cytomine.models.software import Job
-          job = Job(id_project, id_software).save()
-          user_job = User().fetch(job.userJob)
-          print("set_credentials...")
-          cj.set_credentials(str(user_job.publicKey), str(user_job.privateKey))
-          print("done")
-      else:
-          user_job = current_user
-          print("Already running as userjob")
-          run_by_user_job = True
-
-
-      job = cj.get_job(user_job.job)
+      imagegroup_ids = [int(image_group) for image_group in cj.parameters.cytomine_imagegroup.split(',')]
 
       print("Fetching data...")
 
-      update_job_status(job, status = job.RUNNING, status_comment = "Run...", progress = 0)
+      cj.job.update(statusComment = "Run...")
 
       ext = Extractor()
-      update_job_status(job, status = job.RUNNING, status_comment = "Fetching data...", progress = 25)
+      cj.job.update(statusComment = "Fetching data...", progress = 5)
 
 
-
-
-      ext.loadDataFromCytomine(imagegroupls=parameters['cytomine_imagegroup'],id_project = id_project,
-                               id_users=parameters['cytomine_users_annotation'],predict_terms_list=predict_terms_list)
+      ext.loadDataFromCytomine(imagegroupls=imagegroup_ids,id_project = id_project,
+                               id_users=users_annotation,predict_terms_list=predict_terms_list)
 
       d = os.path.dirname(save_path)
       if not os.path.exists(d):
           os.makedirs(d)
 
-      update_job_status(job, status = job.RUNNING, status_comment = "Feature Selection...", progress = 50)
+      if positive_predict_terms_list is not None:
+          cj.job.update(statusComment = "Regrouping Positive terms...", progress = 50)
+          positive_id = max(ext.data["Y"]) + 1
+          for pos_id in positive_predict_terms_list:
+              ext.data["Y"][ext.data["Y"] == pos_id] = positive_id
+
+      cj.job.update(statusComment = "Feature Selection...", progress = 55)
 
       ext.saveFeatureSelectionInCSV(join(d,"results.csv"),n_estimators= n_estimators,
                                     max_features=max_features,min_samples_split=min_samples_split)
 
-      update_job_status(job, status = job.TERMINATED, status_comment = "Finish", progress = 100)
+      cj.job.update(statusComment = "Finished.", progress = 100)
 
 def update_job_status(job, status, status_comment, progress):
     job.status = status if status else job.status
