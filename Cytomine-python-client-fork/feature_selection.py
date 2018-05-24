@@ -66,8 +66,8 @@ def main(argv):
       ext.loadDataFromCytomine(imagegroup_id_list=imagegroup_ids,id_project = id_project,
                                id_users=users_annotation,predict_terms_list=predict_terms_list)
 
-      d = os.path.dirname(save_path)
-      os.makedirs(d,exist_ok=True)
+
+      os.makedirs(save_path,exist_ok=True)
 
       if positive_predict_terms_list is not None:
           cj.job.update(statusComment = "Regrouping Positive terms...", progress = 50)
@@ -77,7 +77,7 @@ def main(argv):
       print("Feature Selection...")
       cj.job.update(statusComment = "Feature Selection...", progress = 55)
 
-      ext.saveFeatureSelectionInCSV(join(d,"results.csv"),n_estimators= n_estimators,
+      ext.saveFeatureSelectionInCSV(join(save_path,"results.csv"),n_estimators= n_estimators,
                                     max_features=max_features,min_samples_split=min_samples_split)
 
       cj.job.update(statusComment = "Finished.", progress = 100)
