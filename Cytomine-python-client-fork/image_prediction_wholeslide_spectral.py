@@ -36,33 +36,17 @@ import pickle
 import os
 from time import localtime, strftime
 
-
 from shapely.geometry import Polygon,MultiPolygon
 import numpy as np
 
-import cytomine
 from cytomine.utilities import Bounds, CytomineSpectralReader
-from cytomine.spectral.extractor import coordonatesToPolygons,polygonToAnnotation
+from cytomine.spectral import coordonatesToPolygons,polygonToAnnotation
 
 from cytomine.models import User,CurrentUser,Job,Annotation
 
 from multiprocessing import Pool
 
-from shapely import wkt
-
 from cytomine import CytomineJob
-
-
-
-#-----------------------------------------------------------------------------------------------------------
-#Functions
-
-
-def str2bool(v):
-        return v.lower() in ("yes", "true", "t", "1")
-
-#-----------------------------------------------------------------------------------------------------------
-
 
 
 def main(argv):
@@ -80,26 +64,21 @@ def main(argv):
       print("Loading prediction model (local)")
       with open(os.path.join(cj.parameters.model_path,cj.parameters.model_name), "rb") as fb:
           classifier = pickle.load(fp)
-          if hasattr(classifier,"set_N_Jobs"):
-              classifier.set_N_Jobs(cj.parameters.model_nb_jobs)
-          elif hasattr(classifier,"n_jobs"):
-              classifier.n_jobs = cj.parameters.model_nb_jobs
+      if hasattr(classifier,"set_N_Jobs"):
+          classifier.set_N_Jobs(cj.parameters.model_nb_jobs)
+      elif hasattr(classifier,"n_jobs"):
+          classifier.n_jobs = cj.parameters.model_nb_jobs
 
       n_jobs = cj.parameters.n_jobs
       n_jobs_reader = cj.parameters.n_jobs_reader
       predict_term = cj.parameters.cytomine_predict_term
 
       #Reading parameters
-
-      id_imagegroup= cj.parameters.cytomine_imagegroup #int(sys.argv[1])
-
-
+      id_imagegroup= cj.parameters.cytomine_imagegroup
       tile_size = cj.parameters.cytomine_tile_size
       overlap = cj.parameters.cytomine_overlap
 
       cj.job.update(statusComment = "Initialization finished...")
-
-
 
       cj.job.update(statusComment = "Initialization of the reader", progress = 1)
 
