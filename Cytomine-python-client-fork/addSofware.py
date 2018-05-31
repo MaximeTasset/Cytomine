@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+
 #
-# * Copyright (c) 2009-2015. Authors: see NOTICE file.
+# * Copyright (c) 2009-2018. Authors: see NOTICE file.
 # *
 # * Licensed under the Apache License, Version 2.0 (the "License");
 # * you may not use this file except in compliance with the License.
@@ -17,7 +18,8 @@
 
 
 __author__          = "Maxime Tasset <maxime.tasset@student.ulg.ac.be>"
-__copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http://www.cytomine.be/"
+
+__copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http://www.cytomine.be/"
 
 from cytomine import Cytomine
 from cytomine.models import Software, SoftwareParameter,SoftwareProject
