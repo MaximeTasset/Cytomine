@@ -1,14 +1,26 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Maxime
-"""
+
+# * Copyright (c) 2009-2018. Authors: see NOTICE file.
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *      http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+
+__author__          = "Maxime Tasset <maxime.tasset@student.ulg.ac.be>"
+__contributors__ = []
+__copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http://www.cytomine.be/"
+
 
 import numpy as np
-from ..cytomine import *
-from ..models.imagegroup import *
-from ..models.ontology import TermCollection
-from ..models.image import ImageInstance
-from ..models.annotation import AnnotationCollection
+from ..models import Term,TermCollection,ImageInstance,AnnotationCollection,ImageGroupHDF5,ImageSequenceCollection,ImageGroup
 
 
 from multiprocessing import RLock
@@ -137,7 +149,16 @@ class Extractor:
 
         writer.writeheader()
         for i in range(len(chi2)):
-          writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
+            writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
+        writer = csv.writer(csvfile,dialect='excel')
+        writer.writerow(["nb_annotation",self.numAnnotation,"nb_pixel"])
+        writer.writerow(["nb_pixel",len(self.data["X"])])
+        fieldnames = ['term_name','nb_annotation', 'nb_pixel']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
+        writer.writeheader()
+        for i in self.numAnnotationTerm:
+            if i in self.mapIdTerm:
+                writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotation[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
     def loadDataFromCytomine(self,imagegroup_id_list=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
@@ -146,16 +167,28 @@ class Extractor:
         """
 
         if predict_terms_list is None:
-          terms = TermCollection(filters={'project':id_project})
+          terms = TermCollection(filters={'project':id_project}).fetch()
           predict_terms_list = {term.id for term in terms}
+          nb_annotation_term = {term.id:0 for term in terms}
+          map_id_name_terms = {term.id:term.name for term in terms}
+        else:
+          predict_terms_list = set(predict_terms_list)
+          map_id_name_terms = {}
+          nb_annotation_term = {term:0 for term in predict_terms_list}
+          for term in predict_terms_list:
+              try:
+                map_id_name_terms[term] = Term(id=term).fetch().name
+              except AttributeError:
+                pass
+        nb_annotation = 0
 
-        predict_terms_list = set(predict_terms_list)
+
         polys = []
         spect = []
         annot = []
         rois = []
 
-        n = 0
+        nb_fetched_image = 0
 
         for imagegroup_id in imagegroup_id_list:
             #Get project imagegroupHDF5 and images from imagegroup_id
@@ -173,9 +206,9 @@ class Extractor:
             for im in images:
 
                 if self.verbose:
-                    sys.stdout.write("\r                                                                   {}      ".format(n))
+                    sys.stdout.write("\r                                                                   {}      ".format(nb_fetched_image))
                     sys.stdout.flush()
-                n += 1
+                nb_fetched_image += 1
                 image = ImageInstance(id=im.image).fetch()
                 if image.numberOfAnnotations:
                   #Get annotations in this image
@@ -191,7 +224,12 @@ class Extractor:
 
                       annotations_list = self.pool.map(ann,id_users)
 
-                  annott,polyss,roiss,rect = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
+
+                  annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
+                  for id in dic:
+                    nb_annotation_term[id] += dic[id]
+                  nb_annotation += nb_ann
+
 
                   if self.verbose:
                       rl = RLock()
@@ -286,9 +324,6 @@ class Extractor:
                         unknownX.append(pixel['spectra'])
             self.rois.extend([(roi[t],roil[t]) for t in range(len(annot[i].term))])
 
-#        self.polys = polys
-#        self.spect = spect
-#        self.annot = annot
         self.numData = int(len(dataCoord))
         self.numUnknown = int(len(unknownCoord))
 
@@ -298,6 +333,13 @@ class Extractor:
                      "unknown_coord":np.asarray(unknownCoord),
                      "unknown_X":np.asarray(unknownX)}
         self.numFeature = int(self.data["X"].shape[1]) if len(spect) else None
+        self.numAnnotation = nb_annotation
+        self.numAnnotationTerm = nb_annotation_term
+        self.mapIdTerm = map_id_name_terms
+        self.numPixelTerm = {i:len(self.data["Y"][self.data["Y"] == i]) for i in nb_annotation_term}
+
+
+
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
         """
@@ -335,6 +377,8 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
     polys = []
     rois = []
     rect = []
+    dic = {}
+    nb_annotation = 0
     for annotations in annotations_list:
         for a in annotations.data():
             a.term = list(set(a.term) & predict_terms_list)
@@ -342,6 +386,9 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
             #if the annotation has no asked term, do not take it
             if not len(a.term):
                 continue
+            nb_annotation += 1
+            for term in a.term:
+                dic[term] = dic.setdefault(term,0) + 1
             a = a.fetch()
             annot.append(a)
             pol = Polygon(loads(a.location))
@@ -358,7 +405,7 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
 
             rect.append((w,h,sizew,sizeh))
             rois.append((round(maxx),round(maxy),sizew,sizeh,image_height))
-    return annot,polys,rois,rect
+    return annot,polys,rois,rect,dic,nb_annotation
 
 def coordonatesToPolygons(coordonates,nb_job=1,pool=None,trim=True):
     """
@@ -366,7 +413,7 @@ def coordonatesToPolygons(coordonates,nb_job=1,pool=None,trim=True):
     return a MultiPolygon that contains all points that are in a valid polygon (if trim == True)
     (ie non-zeros area (or more than one pixel width))
     """
-    from shapely.geometry import Polygon,MultiPolygon
+    from shapely.geometry import Polygon
     from shapely.ops import cascaded_union
 
     #converts points to polygon

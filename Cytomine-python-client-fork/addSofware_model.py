@@ -95,3 +95,5 @@ if __name__ == "__main__":
         with Cytomine(host="demo.cytomine.be", public_key=cytomine_public_key, private_key=cytomine_private_key,
                   verbose=logging.INFO) as cytomine:
                       software.delete()
+
+
