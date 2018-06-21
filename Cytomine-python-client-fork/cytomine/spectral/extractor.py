@@ -158,7 +158,7 @@ class Extractor:
         writer.writeheader()
         for i in self.numAnnotationTerm:
             if i in self.mapIdTerm:
-                writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotation[i], 'nb_pixel':self.numPixelTerm[i]})
+                writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
     def loadDataFromCytomine(self,imagegroup_id_list=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
