@@ -31,7 +31,7 @@ import pickle
 from heapq import nlargest
 from sklearn.feature_selection import chi2,f_classif
 from sklearn.ensemble import ExtraTreesClassifier as ETC
-import csv
+
 import sys
 import six
 import socket,time
@@ -133,9 +133,6 @@ class Extractor:
           return [(f[i],i) for i in range(len(f))]
 
     def saveFeatureSelectionInCSV(self,filename,n_estimators=1000,max_features=None,min_samples_split=2,usedata=1):
-      filename = str(filename)
-      if not filename.endswith('.csv'):
-        filename += ".csv"
       print("chi2")
       chi2 = self.chi2(usedata=usedata)
       print("f_classif")
@@ -143,22 +140,47 @@ class Extractor:
       print("features_ETC")
       etc = self.features_ETC(n_estimators=n_estimators,max_features=max_features,min_samples_split=min_samples_split,usedata=usedata)
 
-      with open(filename, 'w') as csvfile:
-        fieldnames = ['layer','chi2', 'f_classif','ExtraTree']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
+      filename = str(filename)
+      if filename.endswith('.xlsx'):
+        import xlsxwriter
+        with xlsxwriter.Workbook('Expenses01.xlsx') as workbook:
+          worksheet = workbook.add_worksheet()
+          fields = ['layer','chi2', 'f_classif','ExtraTree']
+          worksheet.write_row(0, 0, fields)
+          for row, val in enumerate(range(len(chi2))):
+              worksheet.write_row(row+1,0,[row,chi2[row][0],fclassif[row][0],etc[row][0]])
+          row += 2
+          worksheet.write_row(row,0,["nb_annotation",self.numAnnotation])
+          row += 1
+          worksheet.write_row(row,0,["nb_pixel",len(self.data["X"])])
+          row += 1
+          fields = ['term_name','nb_annotation', 'nb_pixel']
+          worksheet.write_row(row, 0, fields)
+          row += 1
+          for i in self.numAnnotationTerm:
+              if i in self.mapIdTerm:
+                  worksheet.write_row(row,0[self.mapIdTerm[i],self.numAnnotationTerm[i], self.numPixelTerm[i]])
+                  row += 1
+      else:
+        if not filename.endswith('.csv'):
+          filename += ".csv"
+        import csv
+        with open(filename, 'w') as csvfile:
+          fieldnames = ['layer','chi2', 'f_classif','ExtraTree']
+          writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
 
-        writer.writeheader()
-        for i in range(len(chi2)):
-            writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
-        writer = csv.writer(csvfile,dialect='excel')
-        writer.writerow(["nb_annotation",self.numAnnotation,"nb_pixel"])
-        writer.writerow(["nb_pixel",len(self.data["X"])])
-        fieldnames = ['term_name','nb_annotation', 'nb_pixel']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
-        writer.writeheader()
-        for i in self.numAnnotationTerm:
-            if i in self.mapIdTerm:
-                writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
+          writer.writeheader()
+          for i in range(len(chi2)):
+              writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
+          writer = csv.writer(csvfile,dialect='excel')
+          writer.writerow(["nb_annotation",self.numAnnotation])
+          writer.writerow(["nb_pixel",len(self.data["X"])])
+          fieldnames = ['term_name','nb_annotation', 'nb_pixel']
+          writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
+          writer.writeheader()
+          for i in self.numAnnotationTerm:
+              if i in self.mapIdTerm:
+                  writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
     def loadDataFromCytomine(self,imagegroup_id_list=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
@@ -337,8 +359,6 @@ class Extractor:
         self.numAnnotationTerm = nb_annotation_term
         self.mapIdTerm = map_id_name_terms
         self.numPixelTerm = {i:len(self.data["Y"][self.data["Y"] == i]) for i in nb_annotation_term}
-
-
 
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
