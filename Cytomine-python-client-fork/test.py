@@ -17,47 +17,42 @@
 # */
 
 
-__author__          = "Marée Raphaël <raphael.maree@ulg.ac.be>"
-__copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http://www.cytomine.be/"
+__author__          = "Maxime Tasset <maxime.tasset@student.ulg.ac.be>"
+__copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http://www.cytomine.be/"
 
 
-from cytomine import Cytomine
-from cytomine.models import *
-from cytomine.spectral.extractor import *
-from shapely.geometry import Polygon,Point
-from shapely.wkt import loads
+
 from sklearn.ensemble import ExtraTreesClassifier as ETC
-import numpy as np
+from numpy.random import shuffle
+from sklearn.decomposition import PCA
+from cytomine.spectral.extractor import Extractor
 
-import logging
+print("load data from file")
+ext = Extractor("extractedData.save")
+ext.readFile()
+print("fit_transform pca")
+X = PCA().fit_transform(ext.data["X"])
 
-#id_mtasset = 25637310
-#c = Cytomine('demo.cytomine.be','f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5','9e94aa70-4e7c-4152-8067-0feeb58d42eb', verbose= True)
+val = list(range(X.shape[0]))
+shuffle(val)
+etc = ETC(n_jobs=4,n_estimators=100)
 
-#Cytomine connection parameters
-cytomine_host="demo.cytomine.be"
-cytomine_public_key="XXX"
-cytomine_private_key="XXX"
-id_project=28146931
-#id_project=31054043
-#id_users=[25637310]
+print("get feature importances from ETC")
+etc.fit(ext.data["X"],ext.data["Y"])
+imp = [i for imp,i in sorted([(imp,i) for i,imp in enumerate(etc.feature_importances_)])]
+imp.reverse()
 
-#Connection to Cytomine Core
-with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_path = '/api/', working_path = '/tmp/', verbose= logging.WARNING,timeout=1200) as cytomine:
+test_SamplePCA_X,test_SamplePCA_Y = X[val[:int(0.2*len(val))]],ext.data["Y"][val[:int(0.2*len(val))]]
+test_SampleX,test_SampleY = ext.data["X"][val[:int(0.2*len(val))]],ext.data["Y"][val[:int(0.2*len(val))]]
+train_SamplePCA_X,train_SamplePCA_Y = X[val[int(0.2*len(val)):]],ext.data["Y"][val[int(0.2*len(val)):]]
+train_SampleX,train_SampleY = ext.data["X"][val[int(0.2*len(val)):]],ext.data["Y"][val[int(0.2*len(val)):]]
 
-  from cytomine.utilities.reader import *
-  reader = CytomineSpectralReader(28407375,bounds = Bounds(0,0, 100000, 100000),tile_size = Bounds(0,0,30,30),overlap=0,num_thread=10)
-  reader.read()
-  reader.getResult()
-#    image_groups_id = [im.id for im in imagegroup.ImageGroupCollection(filters={'project':id_project}).fetch()]
-#    print(image_groups_id)
-#    ##predict_terms_list = [term.id for term in conn.get_project_terms(id_project) if str(term.name) != 'BloodVessels']
-#    predict_terms_list = [term.id for term in ontology.TermCollection(filters={'project':id_project}).fetch()]
-#
-#    extra = Extractor(nb_job=-1)
-#    extra.loadDataFromCytomine(imagegroup_id_list=image_groups_id,id_project = id_project,id_users=None,predict_terms_list=predict_terms_list)
-##    extra.saveFeatureSelectionInCSV("extraction-28146931.csv",n_estimators=50,max_features=100000,usedata=(1 if id_project==31054043 else 0.2))
-#
-#    print(extra.getinfo())
 
+for i in range(0,1650,100):
+    print("with best {} features/components".format(1650-i))
+    etc.fit(train_SampleX[:,imp[:int(1650-i)]],train_SampleY)
+    print("score before PCA: {}".format(etc.score(test_SampleX[:,imp[:int(1650-i)]],test_SampleY)))
+
+    etc.fit(train_SamplePCA_X[:,:int(1650-i)],train_SamplePCA_Y)
+    print("score after PCA: {}".format(etc.score(test_SamplePCA_X[:,:int(1650-i)],test_SamplePCA_Y)))
 

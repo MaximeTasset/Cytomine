@@ -20,7 +20,8 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 
 
 import numpy as np
-from ..models import Term,TermCollection,ImageInstance,AnnotationCollection,ImageGroupHDF5,ImageSequenceCollection,ImageGroup
+from ..models import Term,TermCollection,ImageInstance,AnnotationCollection
+from ..models import ImageGroupHDF5,ImageSequenceCollection,ImageGroup,ImageGroupCollection
 
 
 from multiprocessing import RLock
@@ -183,7 +184,7 @@ class Extractor:
                   writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
-    def loadDataFromCytomine(self,imagegroup_id_list=[28417287],id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
+    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
         """
         " read the annotations of a list of imagegroup from a project
         """
@@ -202,6 +203,10 @@ class Extractor:
                 map_id_name_terms[term] = Term(id=term).fetch().name
               except AttributeError:
                 pass
+        if imagegroup_id_list is None:
+          imagegroup_id_list = ImageGroupCollection({"project":id_project}).fetch()
+          imagegroup_id_list = [im.id for im in imagegroup_id_list]
+
         nb_annotation = 0
 
 
