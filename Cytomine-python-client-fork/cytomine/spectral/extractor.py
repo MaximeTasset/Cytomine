@@ -357,14 +357,16 @@ class Extractor:
                         unknownX.append(pixel['spectra'])
             self.rois.extend([(roi[t],roil[t]) for t in range(len(annot[i].term))])
 
-        self.numData = int(len(dataCoord))
-        self.numUnknown = int(len(unknownCoord))
+
 
         self.data = {"data_coord":np.asarray(dataCoord),
                      "X":np.asarray(dataX),
                      "Y":np.asarray(dataY),
                      "unknown_coord":np.asarray(unknownCoord),
                      "unknown_X":np.asarray(unknownX)}
+        self.data["rois"] = self.rois
+        self.data["numData"] = int(len(dataCoord))
+        self.data["numUnknown"] = int(len(unknownCoord))
         self.data["numFeature"] = int(self.data["X"].shape[1]) if len(spect) else None
         self.data["numAnnotation"] = nb_annotation
         self.data["numAnnotationTerm"] = nb_annotation_term
