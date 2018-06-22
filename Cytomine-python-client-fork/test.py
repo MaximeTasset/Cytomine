@@ -26,6 +26,7 @@ from sklearn.ensemble import ExtraTreesClassifier as ETC
 from numpy.random import shuffle
 from sklearn.decomposition import PCA
 from cytomine.spectral.extractor import Extractor
+import matplotlib.pyplot as plt
 
 print("load data from file")
 ext = Extractor("extractedData.save")
@@ -104,3 +105,10 @@ for i in range(1600,1650,10):
     score = etc.score(test_SamplePCA_X[:,:int(1650-i)],test_SamplePCA_Y)
     pca_score.append(score)
     print("score after PCA: {}".format(score))
+
+plt.plot(n_feature,pca_score,label="pca")
+plt.plot(n_feature,chi2_score,label="chi2")
+plt.plot(n_feature,imp_score,label="imp")
+plt.plot(n_feature,f_c_score,label="f_classif")
+plt.legend()
+plt.show()
