@@ -77,7 +77,7 @@ class Extractor:
         f = open(filename, "rb")
         try:
             self.data = pickle.load(f)
-            self.populate()
+            self._populate()
         finally:
             f.close()
 
