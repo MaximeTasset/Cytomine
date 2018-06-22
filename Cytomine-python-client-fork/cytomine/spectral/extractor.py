@@ -62,6 +62,11 @@ class Extractor:
         else:
             raise ValueError("error: expected \"binary\" or \"text\"")
 
+    def _populate(self):
+        if hasattr(self,'data'):
+            for name in self.data:
+                setattr(self,name,self.data[name])
+
     def readFile(self,filename=None):
 
         if not filename and self.filename:
@@ -72,6 +77,7 @@ class Extractor:
         f = open(filename, "rb")
         try:
             self.data = pickle.load(f)
+            self.populate()
         finally:
             f.close()
 
@@ -359,11 +365,13 @@ class Extractor:
                      "Y":np.asarray(dataY),
                      "unknown_coord":np.asarray(unknownCoord),
                      "unknown_X":np.asarray(unknownX)}
-        self.numFeature = int(self.data["X"].shape[1]) if len(spect) else None
-        self.numAnnotation = nb_annotation
-        self.numAnnotationTerm = nb_annotation_term
-        self.mapIdTerm = map_id_name_terms
-        self.numPixelTerm = {i:len(self.data["Y"][self.data["Y"] == i]) for i in nb_annotation_term}
+        self.data["numFeature"] = int(self.data["X"].shape[1]) if len(spect) else None
+        self.data["numAnnotation"] = nb_annotation
+        self.data["numAnnotationTerm"] = nb_annotation_term
+        self.data["mapIdTerm"] = map_id_name_terms
+        self.data["numPixelTerm"] = {i:len(self.data["Y"][self.data["Y"] == i]) for i in nb_annotation_term}
+
+        self._populate()
 
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
