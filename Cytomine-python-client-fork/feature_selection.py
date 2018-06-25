@@ -137,9 +137,9 @@ def main(argv):
 
       if positive_predict_terms_list is not None:
           cj.job.update(statusComment = "Regrouping Positive terms...", progress = 50)
-          positive_id = max(ext.data["Y"]) + 1
+          positive_id = max(ext.Y) + 1
           for pos_id in positive_predict_terms_list:
-              ext.data["Y"][ext.data["Y"] == pos_id] = positive_id
+              ext.Y[ext.Y == pos_id] = positive_id
       print("Feature Selection...")
       cj.job.update(statusComment = "Feature Selection...", progress = 55)
 

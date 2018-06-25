@@ -98,10 +98,10 @@ class Extractor:
             f.close()
 
     def chi2(self, sort=False, N=0,usedata=1):
-        n_sample = len(self.data["X"])
+        n_sample = len(self.X)
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        ch,_ = chi2(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
+        ch,_ = chi2(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
         if not N:
             N = len(ch)
 
@@ -114,7 +114,7 @@ class Extractor:
         n_sample = self.numData
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        f,_ = f_classif(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
+        f,_ = f_classif(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
         if not N:
             N = len(f)
 
@@ -128,8 +128,10 @@ class Extractor:
         ind = list(range(n_sample))
         np.random.shuffle(ind)
         if not isinstance(max_features, six.string_types) and max_features is not None:
-            max_features = max(1,min(max_features,int(self.data["X"].shape[1])))
-        etc = ETC(n_estimators=n_estimators,max_features=max_features,min_samples_split=min_samples_split,n_jobs=-1).fit(self.data["X"][ind[:int(usedata*n_sample)]],self.data["Y"][ind[:int(usedata*n_sample)]])
+            max_features = max(1,min(max_features,int(self.X.shape[1])))
+        etc = ETC(n_estimators=n_estimators,max_features=max_features,
+                  min_samples_split=min_samples_split,n_jobs=-1)
+        etc.fit(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
         f = etc.feature_importances_
         if not N:
             N = len(f)
