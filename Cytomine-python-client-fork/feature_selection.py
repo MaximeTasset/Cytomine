@@ -28,6 +28,7 @@ from cytomine.models import TermCollection,UserCollection,ImageGroupCollection
 from cytomine import CytomineJob
 
 import logging
+import json
 
 def main(argv):
   with CytomineJob.from_cli(argv,verbose=logging.WARNING) as cj:
@@ -45,29 +46,79 @@ def main(argv):
 
       termCollection = TermCollection(filters={'project':id_project}).fetch()
       if cj.parameters.cytomine_predict_term != '':
-          terms_name = cj.parameters.cytomine_predict_term.split(',')
-          predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name]
+          terms_name = json.loads(cj.parameters.cytomine_predict_term)
+          if type(terms_name) == dict:
+            terms_name = terms_name["collection"]
+
+          if type(terms_name) == list:
+            if not len(terms_name):
+              positive_predict_terms_list = None
+            elif type(terms_name[0]) == str:
+               predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name]
+               if not len(predict_terms_list):
+                 predict_terms_list = [term.id for term in termCollection]
+
       else:
           predict_terms_list = [term.id for term in termCollection]
 
       if cj.parameters.cytomine_positive_predict_term != '':
-          terms_name = cj.parameters.cytomine_positive_predict_term.split(',')
-          positive_predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in predict_terms_list]
-          if not len(positive_predict_terms_list):
+          terms_name = json.loads(cj.parameters.cytomine_positive_predict_term)
+          if type(terms_name) == dict:
+            terms_name = terms_name["collection"]
+
+          if type(terms_name) == list:
+            if not len(terms_name):
               positive_predict_terms_list = None
+            elif type(terms_name[0]) != str:
+              terms_name = [term["name"] for term in terms_name]
+
+            positive_predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in predict_terms_list]
+            if not len(positive_predict_terms_list):
+              positive_predict_terms_list = None
+
+          else:
+            positive_predict_terms_list = None
       else:
           positive_predict_terms_list = None
 
       if cj.parameters.cytomine_users_annotation != '':
-          users_annotation = cj.parameters.cytomine_users_annotation.split(',')
-          users_annotation = [user.id for user in UserCollection(filters={"project": id_project}).fetch() if user.username in  users_annotation]
+          users_annotation = json.loads(cj.parameters.cytomine_users_annotation)
+
+          if type(users_annotation) == dict:
+            users_annotation = users_annotation["collection"]
+
+          if type(users_annotation) == list and len(users_annotation):
+              if type(users_annotation[0]) != str:
+                users_annotation = [user["username"] for user in users_annotation]
+
+              users_annotation = [user.id for user in UserCollection(filters={"project": id_project}).fetch() if user.username in  users_annotation]
+              if not len(users_annotation):
+                users_annotation = None
+          else:
+            users_annotation = None
       else:
           users_annotation = None
 
+
+      image_group_project = [im.id for im in ImageGroupCollection(filters={'project':id_project}).fetch()]
       if not cj.parameters.cytomine_imagegroup is None and cj.parameters.cytomine_imagegroup != '':
-          imagegroup_ids = [int(image_group) for image_group in cj.parameters.cytomine_imagegroup.split(',')]
+          imagegroup_ids = json.loads(cj.parameters.cytomine_imagegroup)
+          if type(imagegroup_ids) == dict:
+            imagegroup_ids = imagegroup_ids["collection"]
+
+          if type(imagegroup_ids) == list and len(imagegroup_ids):
+            if type(imagegroup_ids[0]) != str:
+                imagegroup_ids = [im["id"] for im in imagegroup_ids]
+
+            imagegroup_ids = [int(image_group) for image_group in imagegroup_ids if int(image_group) in image_group_project]
+            if not len(imagegroup_ids):
+              imagegroup_ids =  image_group_project
+          else:
+             imagegroup_ids =  image_group_project
+
+
       else:
-          imagegroup_ids =  [im.id for im in ImageGroupCollection(filters={'project':id_project}).fetch()]
+          imagegroup_ids =  image_group_project
 
 
       print("Fetching data...")
