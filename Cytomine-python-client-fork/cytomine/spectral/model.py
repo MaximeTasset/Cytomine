@@ -8,7 +8,7 @@ Created on Thu May 31 16:26:05 2018
 from sklearn.cluster import KMeans,MiniBatchKMeans
 import numpy as np
 
-class TwoMeanClustering:
+class KMeanClustering:
     def __init__(self,X,y):
         """
         " X: array-like or sparse matrix, shape=(n_samples, n_features) Training instances to labeled clusters.
@@ -16,6 +16,7 @@ class TwoMeanClustering:
         """
         clusters_labels = np.unique(y)
         self.n_clusters = len(clusters_labels)
+        self.X = X.copy()
 
         self.cluster_centers = np.empty((self.n_clusters,X.shape[1]))
         for i,label in enumerate(clusters_labels):
@@ -35,6 +36,4 @@ class TwoMeanClustering:
         else:
           self.kmeans = KMeans(**kargs)
 
-        return self.kmeans.fit(X)
-
-
+        return self.kmeans.fit(np.concatenate((X,self.X),axis=0))

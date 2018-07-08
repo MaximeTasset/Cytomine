@@ -11,6 +11,8 @@ from timeit import default_timer
 from time import sleep
 import logging
 from cytomine.models import imagegroup
+from time import localtime,strftime
+
 
 if __name__ == "__main__":
 #  print('test')
@@ -38,8 +40,22 @@ if __name__ == "__main__":
   #id_users=[25637310]
 
   #Connection to Cytomine Core
-  with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, base_path = '/api/', working_path = '/tmp/', verbose= logging.WARNING,timeout=1200) as cytomine:
-    imagegroup_id = [im.id for im in imagegroup.ImageGroupCollection(filters={'project':id_project}).fetch()][0]
+  with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, verbose= logging.WARNING,timeout=1200) as cytomine:
+    stop = False
+    it = 0
+    print(id_project)
+    while not stop:
+        try:
+            imagegroup_id = [im.id for im in imagegroup.ImageGroupCollection(filters={'project':int(id_project)}).fetch()][0]
+            stop = True
+        except TypeError:
+            it += 1
+            print(it)
+            if it >= 10:
+                sys.exit()
+            stop = False
+            sleep(10)
+
     if asynchrone:
         bounds = Bounds(0,0,3000,3000)
     else:
@@ -49,21 +65,35 @@ if __name__ == "__main__":
 
     start = default_timer()
 
-    while True:
-      reader.read(async=asynchrone)
+
+    noread = False
+    iteration = 10
+
+    nb_read = 0
+    while not noread:
       it += 1
-      if not it % 100:
-        while reader.getResult() is not None: pass
+      for i in range(iteration):
+        reader.read(async=True)
+        nb_read += 1
+        if not reader.next():
+          noread = True
+          break
+      if not noread:
+        iterat = iteration
+      else:
+        iterat = iteration*2
+      for i in range(iterat):
+        result = reader.getResult(all_coord=True,in_list=True)
+        if result is None: #that means no results left to fetch
+          break
       #simulation of some workload
       sleep(10)
-      if not it % 1000:
+
+      if not it % 100:
         stop = default_timer()
-        print("it {} : position: {} after {} h {} m {} s ({} s)".format(it,reader.window_position,int((stop-start)/3600),
-                                                                 int(((start-stop)%3600)/60),(stop-start)%60,stop-start))
+        print("it {} and {} reads : position: {} after {} h {} m {} s ({} s) (net: {})".format(it,nb_read,reader.window_position,int((stop-start)/3600),
+                                                                 int(((start-stop)%3600)/60),(stop-start)%60,stop-start,stop-start - it*10))
         sys.stdout.flush()
-      if not reader.next():
-        break
-    while reader.getResult() is not None: pass
 
     stop = default_timer()
     elapsed_time = stop-start

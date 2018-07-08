@@ -34,11 +34,13 @@ print("load data from file")
 ext = Extractor("extractedData.save")
 ext.readFile()
 print("fit_transform pca")
-X = PCA().fit_transform(ext.data["X"])
+pca = PCA().fit(ext.X)
+print("transform")
+X = pca.transform(ext.X)
 
 val = list(range(X.shape[0]))
 shuffle(val)
-etc = ETC(n_jobs=4,n_estimators=100)
+etc = ETC(n_jobs=3,n_estimators=100)
 
 print("getting feature importances from ETC")
 imp_val = ext.features_ETC(n_estimators=100)
@@ -74,11 +76,11 @@ sumv = [i for val,i in sorted([(val,i) for i,val in enumerate(sum_val)])]
 del imp_val,f_c_val,chi2_val
 
 #Test and train sets
-test_SamplePCA_X,test_SamplePCA_Y = X[val[:int(0.2*len(val))]],ext.data["Y"][val[:int(0.2*len(val))]]
-test_SampleX,test_SampleY = ext.data["X"][val[:int(0.2*len(val))]],ext.data["Y"][val[:int(0.2*len(val))]]
+test_SamplePCA_X,test_SamplePCA_Y = X[val[:int(0.2*len(val))]],ext.Y[val[:int(0.2*len(val))]]
+test_SampleX,test_SampleY = ext.X[val[:int(0.2*len(val))]],ext.Y[val[:int(0.2*len(val))]]
 
-train_SamplePCA_X,train_SamplePCA_Y = X[val[int(0.2*len(val)):]],ext.data["Y"][val[int(0.2*len(val)):]]
-train_SampleX,train_SampleY = ext.data["X"][val[int(0.2*len(val)):]],ext.data["Y"][val[int(0.2*len(val)):]]
+train_SamplePCA_X,train_SamplePCA_Y = X[val[int(0.2*len(val)):]],ext.Y[val[int(0.2*len(val)):]]
+train_SampleX,train_SampleY = ext.X[val[int(0.2*len(val)):]],ext.Y[val[int(0.2*len(val)):]]
 
 
 pca_score = []
@@ -89,8 +91,8 @@ sum_score = []
 n_feature = []
 
 
-for i in list(set(list(range(0,1650,100))+list(range(1600,1650,10)))):
-    print("Scores with best {} features/components:\n".format(1650-i))
+for i in sorted(list(set(list(range(0,1650,100))+list(range(1600,1650,10))))):
+    print("\nScores with best {} features/components:\n".format(1650-i))
     n_feature.append(1650-i)
 
     print("Scores before PCA:")
@@ -125,17 +127,19 @@ plt.plot(n_feature,sum_score,label="sum")
 plt.legend()
 plt.show()
 
-print("fit_transform TSNE 2")
-tsne2 = TSNE(2,n_iter=1000).fit_transform(X[:,:50])
-print("fit_transform TSNE 3")
-tsne3 = TSNE(3,n_iter=1000).fit_transform(X[:,:50])
-print("fit_transform TSNE 4")
-tsne4 = TSNE(4,n_iter=1000).fit_transform(X[:,:50])
+count = 0
+for i,c in enumerate(pca.explained_variance_ratio_):
+    count += c
+    if count >= 0.9:
+      break
+
 
 tsne_score = {}
-for name,tsne in [("tsne2",tsne2),("tsne3",tsne3),("tsne4",tsne4)]:
-    test_SampleTSNE_X,test_SampleTSNE_Y = tsne[val[:int(0.2*len(val))]],ext.data["Y"][val[:int(0.2*len(val))]]
-    train_SampleTSNE_X,train_SampleTSNE_Y = tsne[val[int(0.2*len(val)):]],ext.data["Y"][val[int(0.2*len(val)):]]
+for name,n in [("tsne2",2),("tsne3",3)]:
+    print("fit_transform TSNE {}".format(n))
+    tsne = TSNE(n,n_iter=1000).fit_transform(X[:,:i+1])
+    test_SampleTSNE_X,test_SampleTSNE_Y = tsne[val[:int(0.2*len(val))]],ext.Y[val[:int(0.2*len(val))]]
+    train_SampleTSNE_X,train_SampleTSNE_Y = tsne[val[int(0.2*len(val)):]],ext.Y[val[int(0.2*len(val)):]]
     etc.fit(train_SampleTSNE_X,train_SampleTSNE_Y)
     score = etc.score(test_SampleTSNE_X,test_SampleTSNE_Y)
     tsne_score[name] = score
