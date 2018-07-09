@@ -391,16 +391,11 @@ class Extractor:
         x = []
         y = []
         for roi,labels in rois:
-            for i in range(0,roi.shape[0]-sliceSize[0],step):
-                for j in range(0,roi.shape[1]-sliceSize[1],step):
-                    ic = int(abs(2*i+sliceSize[0])/2)
-                    jc = int(abs(2*j+sliceSize[1])/2)
-                    if labels[ic,jc]:
-                        if flatten:
-                            x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten())
-                        else:
-                            x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]])
-                        y.append(labels[ic,jc])
+            for rect,coord in roi2data(roi,sliceSize,step,flatten):
+                ic,jc = coord
+                if labels[ic,jc]:
+                    x.append(rect)
+                    y.append(labels[ic,jc])
 
         return np.array(x),np.array(y)
 
@@ -408,6 +403,23 @@ class Extractor:
     def getinfo(self):
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
+
+def roi2data(roi,sliceSize=(3,3),step=1,flatten=True):
+        """
+        roi a np.array((width,height,features))
+
+        """
+        x_coord = []
+        for i in range(0,roi.shape[0]-sliceSize[0],step):
+            for j in range(0,roi.shape[1]-sliceSize[1],step):
+                ic = int(abs(2*i+sliceSize[0])/2)
+                jc = int(abs(2*j+sliceSize[1])/2)
+                if flatten:
+                    x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten(),(ic,jc)))
+                else:
+                    x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]],(ic,jc)))
+
+        return x_coord
 
 def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
     annot = []

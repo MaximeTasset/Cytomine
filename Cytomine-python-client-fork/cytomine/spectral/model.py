@@ -7,6 +7,7 @@ Created on Thu May 31 16:26:05 2018
 
 from sklearn.cluster import KMeans,MiniBatchKMeans
 import numpy as np
+import psutil
 
 class KMeanClustering:
     def __init__(self,X,y):
@@ -37,3 +38,14 @@ class KMeanClustering:
           self.kmeans = KMeans(**kargs)
 
         return self.kmeans.fit(np.concatenate((X,self.X),axis=0))
+
+
+class SpectralModel:
+    def __init__(self,base_estimator,nb_estimator,slice_size=(3,3),nb_job=-1):
+        self.nb_job = nb_job if nb_job > 0 else max(psutil.cpu_count() + nb_job,1)
+        self.sliceSize = slice_size
+
+    def fit(X,y):
+        pass
+
+
