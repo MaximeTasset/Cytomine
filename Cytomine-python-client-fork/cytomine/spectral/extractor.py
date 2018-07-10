@@ -513,6 +513,13 @@ def polygonToAnnotation(polygon):
     #actual annotation's polygon
     return Polygon(ext).buffer(0)
 
+def split(array3D):
+    """
+    array3D array-like of shape (n,m,k)
+    return a list of k elements where the ith element corresponds to the array3D[:,:,i]
+    """
+    return np.split(array3D,array3D.shape[2],2)
+
 def splitRect(rect,maxw,maxh):
 
     rects = []
