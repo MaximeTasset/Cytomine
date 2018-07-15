@@ -123,7 +123,7 @@ class Extractor:
         else:
           return [(f[i],i) for i in range(len(f))]
 
-    def features_ETC(self, sort=False, N=0,n_estimators=1000,max_features='auto',min_samples_split=2,usedata=1):
+    def features_ETC(self, sort=False, N=0,n_estimators=10,max_features='auto',min_samples_split=2,usedata=1):
         n_sample = self.numData
         ind = list(range(n_sample))
         np.random.shuffle(ind)
@@ -141,7 +141,7 @@ class Extractor:
         else:
           return [(f[i],i) for i in range(len(f))]
 
-    def saveFeatureSelectionInCSV(self,filename,n_estimators=1000,max_features=None,min_samples_split=2,usedata=1):
+    def saveFeatureSelectionInCSV(self,filename,n_estimators=10,max_features=None,min_samples_split=2,usedata=1):
       print("chi2")
       chi2 = self.chi2(usedata=usedata)
       print("f_classif")
@@ -150,6 +150,7 @@ class Extractor:
       etc = self.features_ETC(n_estimators=n_estimators,max_features=max_features,min_samples_split=min_samples_split,usedata=usedata)
 
       filename = str(filename)
+      print("Saving")
       if filename.endswith('.xlsx'):
         import xlsxwriter
         with xlsxwriter.Workbook(filename) as workbook:
