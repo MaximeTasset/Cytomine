@@ -32,7 +32,7 @@ save_path = "/tmp"
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
-        software = Software(name="Feature_Selection",
+        software = Software(name="Feature_Selection_2",
                             service_name="pyxitSuggestedTermJobService",
                             result_name="ValidateAnnotation").save()
 
@@ -60,6 +60,7 @@ def main(argv):
         SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300).save()
         SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400).save()
         SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600).save()
+        SoftwareParameter("save_as_xlsx", type="Number", id_software=software.id, default_value=0, index=1800).save()
 
         print(software.id)
         SoftwareProject(software.id,id_project).save()
@@ -69,6 +70,7 @@ def main(argv):
 if __name__ == "__main__":
     import sys
     import logging
+
     if len(sys.argv[1:]):
       software = main(sys.argv[1:])
     else:
@@ -87,7 +89,8 @@ if __name__ == "__main__":
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
-                   "--save_path",save_path]) # complete path where the 'results.csv' will be saved
+                   "--save_path",save_path,# complete path where the 'results.csv' will be saved
+                   "--save_as_xlsx",str(1)])
       try:
         job = main_feature(argv)
       finally:
