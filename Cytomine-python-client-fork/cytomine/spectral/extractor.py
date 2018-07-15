@@ -157,7 +157,9 @@ class Extractor:
           fields = ['layer','chi2', 'f_classif','ExtraTree']
           worksheet.write_row(0, 0, fields)
           for row, val in enumerate(range(len(chi2))):
-              worksheet.write_row(row+1,0,[row,chi2[row][0],fclassif[row][0],etc[row][0]])
+              worksheet.write_row(row+1,0,[row,(chi2[row][0] if not (np.isnan(chi2[row][0]) or np.isinf(chi2[row][0])) else 0),
+                                           (fclassif[row][0] if not (np.isnan(fclassif[row][0]) or np.isinf(fclassif[row][0])) else 0),
+                                           (etc[row][0] if not (np.isnan(etc[row][0]) or np.isinf(etc[row][0])) else 0)])
           row += 2
           worksheet.write_row(row,0,["nb_annotation",self.numAnnotation])
           row += 1
@@ -168,7 +170,7 @@ class Extractor:
           row += 1
           for i in self.numAnnotationTerm:
               if i in self.mapIdTerm:
-                  worksheet.write_row(row,0[self.mapIdTerm[i],self.numAnnotationTerm[i], self.numPixelTerm[i]])
+                  worksheet.write_row(row,0,[self.mapIdTerm[i],self.numAnnotationTerm[i], self.numPixelTerm[i]])
                   row += 1
       else:
         if not filename.endswith('.csv'):
