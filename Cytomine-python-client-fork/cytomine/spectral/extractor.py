@@ -152,7 +152,7 @@ class Extractor:
       filename = str(filename)
       if filename.endswith('.xlsx'):
         import xlsxwriter
-        with xlsxwriter.Workbook('Expenses01.xlsx') as workbook:
+        with xlsxwriter.Workbook(filename) as workbook:
           worksheet = workbook.add_worksheet()
           fields = ['layer','chi2', 'f_classif','ExtraTree']
           worksheet.write_row(0, 0, fields)
@@ -223,7 +223,7 @@ class Extractor:
         annot = []
         rois = []
 
-        nb_fetched_image = 0
+        nb_fetched_image = 1
 
         for imagegroup_id in imagegroup_id_list:
             #Get project imagegroupHDF5 and images from imagegroup_id
@@ -236,12 +236,13 @@ class Extractor:
             #allow to get only the images used in the HDF5 imageGroup
             images = ImageSequenceCollection(filters={"imagegroup":imagegroup_id}).fetch()
             if not images:
-              continue
-
+                continue
+            if self.verbose:
+                nb_image = len(images)
             for im in images:
 
                 if self.verbose:
-                    sys.stdout.write("\r                                                                   {}      ".format(nb_fetched_image))
+                    sys.stdout.write("\r                 {}/{}      ".format(nb_fetched_image,nb_image))
                     sys.stdout.flush()
                 nb_fetched_image += 1
                 image = ImageInstance(id=im.image).fetch()
@@ -275,6 +276,10 @@ class Extractor:
                       sp = None
                       im =  ImageGroupHDF5(id=imagegroupHDF5)
                       requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                      if self.verbose:
+                          with rl:
+                              sys.stdout.write("\r{}/{}      ".format(self.done,nb))
+                              sys.stdout.flush()
                       while len(requests):
                           (w,h,sizew,sizeh) = requests.pop()
                           try:

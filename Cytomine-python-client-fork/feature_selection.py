@@ -32,6 +32,8 @@ import json
 
 def main(argv):
   with CytomineJob.from_cli(argv,verbose=logging.WARNING) as cj:
+      cj.parameters.save_as_xlsx = bool(cj.parameters.save_as_xlsx)
+
       id_project = cj.project.id
 
       save_path = cj.parameters.save_path
@@ -143,7 +145,8 @@ def main(argv):
       print("Feature Selection...")
       cj.job.update(statusComment = "Feature Selection...", progress = 55)
 
-      ext.saveFeatureSelectionInCSV(join(save_path,"results.csv"),n_estimators= n_estimators,
+      name = "results." + ("xlsx" if cj.parameters.save_as_xlsx else "csv")
+      ext.saveFeatureSelectionInCSV(join(save_path,name),n_estimators= n_estimators,
                                     max_features=max_features,min_samples_split=min_samples_split)
 
       cj.job.update(statusComment = "Finished.", progress = 100)
@@ -154,15 +157,3 @@ def update_job_status(job, status, status_comment, progress):
     job.statusComment = status_comment if status_comment else job.statusComment
     job.progress = progress if progress else job.progress
     job.update()
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv[1:]):
-      software = main(sys.argv[1:])
-    else:
-      software = main(['--cytomine_host',"demo.cytomine.be",
-                       "--cytomine_public_key","f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5",
-                       "--cytomine_private_key","9e94aa70-4e7c-4152-8067-0feeb58d42eb",
-                       ])
-
-    main(sys.argv[1:])

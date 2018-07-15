@@ -124,6 +124,7 @@ class ImageGroupHDF5(Model):
           return val["collection"]
         except TypeError:
           from time import localtime, strftime,sleep
+          import socket
           print("TIME : %s" %strftime("%Y-%m-%d %H:%M:%S", localtime()))
           print(uri)
           sleep(10)
@@ -154,6 +155,10 @@ class ImageSequence(Model):
         self.channel = channel
         self.model = None
         self.populate(attributes)
+
+    def fetch_channel(self):
+        uri = "imagegroup/{}/{}/{}/{}/{}/imagesequence.json".format(self.imageGroup,self.channel,self.zStack,self.slice,self.time)
+        return self.populate(Cytomine.get_instance().get(uri))
 
     def __str__(self):
         return "[{}] {} : Group {} - Image {} {}/{}/{}/{} ".format(self.callback_identifier,

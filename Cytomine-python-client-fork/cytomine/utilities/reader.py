@@ -29,15 +29,15 @@ import numpy
 import threading
 import copy
 
-import Queue
+import queue as Queue
 from PIL import Image
-from StringIO import StringIO
+from io import StringIO
 
 from multiprocessing.pool import ThreadPool
 import numpy as np
 from collections import deque
 
-from ..models.imagegroup import ImageGroupHDF5,ImageGroup,ImageSequenceCollection
+from ..models.imagegroup import ImageGroupHDF5,ImageGroup,ImageSequence
 from ..models.image import ImageInstance
 
 import socket,time
@@ -363,12 +363,18 @@ class CytomineSpectralReader(Reader):
 
         super().__init__()
         self.imagegroup_id = imagegroup_id
-        self.imagegroupHDF5 = ImageGroup(id=imagegroup_id).image_groupHDF5().id
+        imagegroup = ImageGroup(id=imagegroup_id)
+        self.imagegroupHDF5 = imagegroup.image_groupHDF5().id
+        characteristics = imagegroup.characteristics()
 
-        images = ImageSequenceCollection(filters={"imagegroup":imagegroup_id}).fetch()
-        image = ImageInstance(id=images[0].image).fetch()
+        image = ImageSequence(imagegroup.id,None,
+                              characteristics['zStack'][0],
+                              characteristics['slice'][0],
+                              characteristics['time'][0],
+                              characteristics['channel'][0]).fetch_channel()
+        image = ImageInstance(id=image.image).fetch()
         #width and height of the imagegroup and the number of channel
-        self.dimension = (image.width,image.height,len(images))
+        self.dimension = (image.width,image.height,len(characteristics['channel']))
         self.first_id = image.id
         self.setBounds(bounds)
 
