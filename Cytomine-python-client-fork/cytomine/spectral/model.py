@@ -10,6 +10,8 @@ from .extractor import Extractor,roi2data
 import numpy as np
 import psutil
 from sklearn.tree import DecisionTreeClassifier
+from multiprocessing.pool import ThreadPool
+
 
 class KMeanClustering:
     def __init__(self,X,y,sliceSize=(3,3),step=1,notALabelFlag=0):
@@ -68,11 +70,11 @@ class KMeanClustering:
         return y
 
 class SpectralModel:
-    def __init__(self,base_estimator=DecisionTreeClassifier,n_estimators=10,step=1,slice_size=(3,3),nb_job=-1,notALabelFlag=0):
+    def __init__(self,base_estimator=DecisionTreeClassifier,n_estimators=10,step=1,slice_size=(3,3),n_job=-1,notALabelFlag=0):
         """
         " notALabelFlag, the value in y which does not correspond to a label (ie unlabeled coordinate)
         """
-        self.nb_job = nb_job if nb_job > 0 else max(psutil.cpu_count() + nb_job,1)
+        self.n_job = n_job if n_job > 0 else max(psutil.cpu_count() + n_job + 1,1)
         self.n_esimators = n_estimators
         self.base_estimator = base_estimator
         self.step = min(step,1)
@@ -86,25 +88,32 @@ class SpectralModel:
         """
         X,y = Extractor().rois2data(zip(X,y),self.sliceSize,self.step,self.notALabelFlag)
 
-        #make it parallelized
         self.estimators = []
         ln = len(y)
-        indexes = list(range(ln))
+        indexes = [list(range(ln)) for i in range(self.n_job)]
+        pool = ThreadPool(self.n_job)
+        st = 0
         for i in range(self.n_esimators):
-            np.random.shuffle(indexes)
-            self.estimators.append(self.base_estimator().fit(X[indexes[:int(use*ln)],:],y[indexes[:int(use*ln)]]))
+            np.random.shuffle(indexes[int(i%self.n_job)])
+            if i and i % self.n_job == 0 or i == self.n_esimators-1:
+                self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
+                st = i
+        pool.close()
+
         return self
 
     def predict(self,X):
         """
         " X: array-like or sparse matrix, shape=(width,heigth, n_features) Training instances to unlabeled clusters.
         """
+
         Xdata,coord = roi2data(X,self.sliceSize,self.step,splitted=True)
         Xdata = np.array(Xdata)
 
         #make it parallelized
         ylabels = [self.estimators[i].predict(Xdata) for i in range(self.n_esimators)]
         ylabels = zip(*ylabels)
+
 
         y = np.empty(X.shape[:-1])
         y[:,:] = self.notALabelFlag
@@ -115,3 +124,13 @@ class SpectralModel:
             y[coord[i][0],coord[i][1]] = label
 
         return y
+
+def fit(arg):
+    estimator,arg = arg
+    estimator = estimator()
+    estimator.fit(*arg)
+    return estimator
+
+def predict(arg):
+    estimator,y = arg
+    return estimator.predict(y)
