@@ -75,7 +75,7 @@ class SpectralModel:
         " notALabelFlag, the value in y which does not correspond to a label (ie unlabeled coordinate)
         """
         self.n_job = n_job if n_job > 0 else max(psutil.cpu_count() + n_job + 1,1)
-        self.n_esimators = n_estimators
+        self.n_estimators = n_estimators
         self.base_estimator = base_estimator
         self.step = min(step,1)
         self.sliceSize = slice_size
@@ -93,9 +93,10 @@ class SpectralModel:
         indexes = [list(range(ln)) for i in range(self.n_job)]
         pool = ThreadPool(self.n_job)
         st = 0
-        for i in range(self.n_esimators):
+        for i in range(self.n_estimators + 1):
             np.random.shuffle(indexes[int(i%self.n_job)])
-            if i and i % self.n_job == 0 or i == self.n_esimators-1:
+            if i and i % self.n_job == 0 or i == self.n_estimators:
+                print(i-st)
                 self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
                 st = i
         pool.close()
@@ -110,10 +111,18 @@ class SpectralModel:
         Xdata,coord = roi2data(X,self.sliceSize,self.step,splitted=True)
         Xdata = np.array(Xdata)
 
-        #make it parallelized
-        ylabels = [self.estimators[i].predict(Xdata) for i in range(self.n_esimators)]
-        ylabels = zip(*ylabels)
+        ylabels = []
+        pool = ThreadPool(self.n_job)
+        st = 0
+        try:
+            for i in range(self.n_estimators):
+                if i and i % self.n_job == 0 or i == self.n_estimators-1:
+                    ylabels.extend(pool.map(predict,[(self.estimators[j],Xdata) for j in range(st,i+1)]))
+                    st = i
+        finally:
+          pool.close()
 
+        ylabels = zip(*ylabels)
 
         y = np.empty(X.shape[:-1])
         y[:,:] = self.notALabelFlag
