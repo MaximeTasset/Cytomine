@@ -93,13 +93,15 @@ class SpectralModel:
         indexes = [list(range(ln)) for i in range(self.n_job)]
         pool = ThreadPool(self.n_job)
         st = 0
-        for i in range(self.n_estimators + 1):
-            np.random.shuffle(indexes[int(i%self.n_job)])
-            if i and i % self.n_job == 0 or i == self.n_estimators:
-                print(i-st)
-                self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
-                st = i
-        pool.close()
+        try:
+            for i in range(self.n_estimators + 1):
+                np.random.shuffle(indexes[int(i%self.n_job)])
+                if i and i % self.n_job == 0 or i == self.n_estimators:
+                    print(i-st)
+                    self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
+                    st = i
+        finally:
+            pool.close()
 
         return self
 
@@ -120,7 +122,7 @@ class SpectralModel:
                     ylabels.extend(pool.map(predict,[(self.estimators[j],Xdata) for j in range(st,i+1)]))
                     st = i
         finally:
-          pool.close()
+            pool.close()
 
         ylabels = zip(*ylabels)
 
