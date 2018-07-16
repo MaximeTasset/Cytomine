@@ -386,7 +386,7 @@ class Extractor:
         self._populate()
 
 
-    def rois2data(self,rois=None,sliceSize=(3,3),step=1,flatten=True):
+    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True):
         """
         rois a list of tuple (np.array((width,height,features)),np.array((width,height)))
         """
@@ -394,6 +394,7 @@ class Extractor:
         if rois is None:
             if hasattr(self,"rois"):
                 rois = self.rois
+                notALabelFlag = 0
             else:
                 return
         x = []
@@ -401,7 +402,7 @@ class Extractor:
         for roi,labels in rois:
             for rect,coord in roi2data(roi,sliceSize,step,flatten):
                 ic,jc = coord
-                if labels[ic,jc]:
+                if labels[ic,jc] != notALabelFlag:
                     x.append(rect)
                     y.append(labels[ic,jc])
 
@@ -412,22 +413,38 @@ class Extractor:
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
 
-def roi2data(roi,sliceSize=(3,3),step=1,flatten=True):
+def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False):
         """
         roi a np.array((width,height,features))
 
         """
-        x_coord = []
+        if not splitted:
+          x_coord = []
+        else:
+          x = []
+          coord = []
+
         for i in range(0,roi.shape[0]-sliceSize[0],step):
             for j in range(0,roi.shape[1]-sliceSize[1],step):
                 ic = int(abs(2*i+sliceSize[0])/2)
                 jc = int(abs(2*j+sliceSize[1])/2)
-                if flatten:
-                    x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten(),(ic,jc)))
+                if not splitted:
+                    if flatten:
+                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten(),(ic,jc)))
+                    else:
+                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]],(ic,jc)))
                 else:
-                    x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]],(ic,jc)))
+                    if flatten:
+                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten())
+                        coord.append((ic,jc))
+                    else:
+                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]])
+                        coord.append((ic,jc))
 
-        return x_coord
+        if splitted:
+          return x,coord
+        else:
+          return x_coord
 
 def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
     annot = []

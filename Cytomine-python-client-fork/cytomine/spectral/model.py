@@ -6,18 +6,25 @@ Created on Thu May 31 16:26:05 2018
 """
 
 from sklearn.cluster import KMeans,MiniBatchKMeans
+from .extractor import Extractor,roi2data
 import numpy as np
 import psutil
 
 class KMeanClustering:
-    def __init__(self,X,y):
+    def __init__(self,X,y,sliceSize=(3,3),step=1,notALabelFlag=0):
         """
-        " X: array-like or sparse matrix, shape=(n_samples, n_features) Training instances to labeled clusters.
-        " y: array-like of shape = [n_samples] The target values (class labels).
+        " Xs: a list of n array-like or sparse matrix, shape=(width,heigth, n_features) Training instances to labeled clusters.
+        " y: a list of n array-like of shape =(width,heigth) The target values (class labels).
+        " notALabelFlag, the value in y which does not correspond to a label (ie unlabeled coordinate)
         """
+
+
+        X,y = Extractor().rois2data(zip(X,y),sliceSize,step,notALabelFlag)
         clusters_labels = np.unique(y)
         self.n_clusters = len(clusters_labels)
-        self.X = X.copy()
+        self.X = X
+        self.sliceSize = sliceSize
+        self.step = step
 
         self.cluster_centers = np.empty((self.n_clusters,X.shape[1]))
         for i,label in enumerate(clusters_labels):
@@ -26,18 +33,21 @@ class KMeanClustering:
 
     def fit(self,X,**kargs):
         """
-        " X: array-like or sparse matrix, shape=(n_samples, n_features) Training instances to unlabeled clusters.
+        " X: array-like or sparse matrix, shape=(width,heigth, n_features) Training instances to unlabeled clusters.
         """
         kargs["n_clusters"] = self.n_clusters
 
         kargs["init"] = self.cluster_centers.copy()
 
-        if X.shape[0] >= 10000 and False:
+        Xdata,coord = roi2data(X,self.sliceSize,self.step,splitted=True)
+        Xdata = np.array(Xdata)
+
+        if Xdata.shape[0] >= 10000 and False:
           self.kmeans = MiniBatchKMeans(**kargs)
         else:
           self.kmeans = KMeans(**kargs)
 
-        return self.kmeans.fit(np.concatenate((X,self.X),axis=0))
+        return self.kmeans.fit(np.concatenate((Xdata,self.X),axis=0))
 
 
 class SpectralModel:
