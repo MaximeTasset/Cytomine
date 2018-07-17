@@ -23,9 +23,10 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 import os
 
 from os.path import join
-from cytomine.spectral import Extractor
+from cytomine.spectral import Extractor,SpectralModel
 from cytomine.models import TermCollection,UserCollection,ImageGroupCollection
 from cytomine import CytomineJob
+import pickle
 
 import logging
 
@@ -39,9 +40,12 @@ def main(argv):
       except ValueError:
           max_features = cj.parameters.forest_n_estimators
 
-
       n_estimators = cj.parameters.forest_n_estimators
       min_samples_split = cj.parameters.forest_min_samples_split
+      step = cj.parameters.step
+      slice_size = (cj.parameters.slice_size,cj.parameters.slice_size)
+      n_jobs = cj.parameters.n_jobs
+      use = cj.parameters.data_by_estimator
 
       termCollection = TermCollection(filters={'project':id_project}).fetch()
       if cj.parameters.cytomine_predict_term != '':
@@ -49,14 +53,6 @@ def main(argv):
           predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name]
       else:
           predict_terms_list = [term.id for term in termCollection]
-
-      if cj.parameters.cytomine_positive_predict_term != '':
-          terms_name = cj.parameters.cytomine_positive_predict_term.split(',')
-          positive_predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in predict_terms_list]
-          if not len(positive_predict_terms_list):
-              positive_predict_terms_list = None
-      else:
-          positive_predict_terms_list = None
 
       if cj.parameters.cytomine_users_annotation != '':
           users_annotation = cj.parameters.cytomine_users_annotation.split(',')
@@ -84,16 +80,18 @@ def main(argv):
 
       os.makedirs(save_path,exist_ok=True)
 
-      if positive_predict_terms_list is not None:
-          cj.job.update(statusComment = "Regrouping Positive terms...", progress = 50)
-          positive_id = max(ext.data["Y"]) + 1
-          for pos_id in positive_predict_terms_list:
-              ext.data["Y"][ext.data["Y"] == pos_id] = positive_id
-      print("Feature Selection...")
-      cj.job.update(statusComment = "Feature Selection...", progress = 55)
+      print("Fitting Model...")
+      cj.job.update(statusComment = "Fitting Model...", progress = 55)
 
-      ext.saveFeatureSelectionInCSV(join(save_path,"results.csv"),n_estimators= n_estimators,
-                                    max_features=max_features,min_samples_split=min_samples_split)
+      X = [x for x,y in ext.rois]
+      y = [y for x,y in ext.rois]
+      sm = SpectralModel(n_estimators=n_estimators,step=step,slice_size=slice_size,n_jobs=n_jobs)
+      sm.fit(X,y,use)
+
+      print("Saving The Model...")
+      cj.job.update(statusComment = "Saving The Model...", progress = 95)
+      with open(join(save_path,"model.pickle"),"wb") as m:
+          pickle.dump(sm,m,pickle.HIGHEST_PROTOCOL)
 
       cj.job.update(statusComment = "Finished.", progress = 100)
       return cj.job

@@ -44,9 +44,6 @@ def main(argv):
         # filtering annotations
         SoftwareParameter("cytomine_predict_term", type="ListDomain", id_software=software.id, index=500, default_value='',
                           uri="/api/project/$currentProject$/term.json",uri_sort_attribut="name",uri_print_attribut="name").save()
-        SoftwareParameter("cytomine_positive_predict_term", type="ListDomain", id_software=software.id, index=600, default_value='',
-                          uri="/api/project/$currentProject$/term.json",uri_sort_attribut="name",uri_print_attribut="name").save()
-
 
         SoftwareParameter("cytomine_users_annotation", type="ListDomain", id_software=software.id, index=700, default_value='',
                           uri="/api/project/$currentProject$/user.json",uri_sort_attribut="username",uri_print_attribut="username").save()
@@ -55,11 +52,14 @@ def main(argv):
 
         # running parameters
         SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000).save()
+        SoftwareParameter("step", type="Number", id_software=software.id, default_value=1, index=1100).save()
+        SoftwareParameter("slice_size", type="Number", id_software=software.id, default_value=3, index=1200).save()
+        SoftwareParameter("data_by_estimator", type="Number", id_software=software.id, default_value=0.8, index=1300).save()
 
-        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1200).save()
-        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300).save()
-        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400).save()
-        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600).save()
+        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1500).save()
+        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1600).save()
+        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1700).save()
+        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1800).save()
 
         print(software.id)
         SoftwareProject(software.id,id_project).save()
@@ -81,7 +81,6 @@ if __name__ == "__main__":
       argv.extend(["--cytomine_id_project",str(id_project),
                    "--cytomine_id_software",str(software.id),
                    "--cytomine_predict_term",'', #list of the terms names used for the feature selection format 'name1,name2,name3' (note: if '', all terms will be used)
-                   "--cytomine_positive_predict_term",'', #list of the terms names that will be merge format 'name1,name2,name3' (note: if '', no merge)
                    "--cytomine_users_annotation",'', #the annotations which have as user, one in the list will be used, not the others (note: if '' all annotation will be used)
                    "--cytomine_imagegroup",'', #list of the project imagegroup's id that will be used (note: if '' all imagegroup will be used)
                    "--n_jobs",str(4),

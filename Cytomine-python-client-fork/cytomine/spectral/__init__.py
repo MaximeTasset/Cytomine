@@ -23,3 +23,4 @@ __copyright__       = "Copyright 2010-2015 University of Liège, Belgium, http:/
 
 
 from .extractor import *
+from .models import *

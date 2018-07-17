@@ -70,13 +70,21 @@ class KMeanClustering:
         return y
 
 class SpectralModel:
-    def __init__(self,base_estimator=DecisionTreeClassifier,n_estimators=10,step=1,slice_size=(3,3),n_job=-1,notALabelFlag=0):
+    def __init__(self,
+                 base_estimator=DecisionTreeClassifier,
+                 choice_function=np.argmax,
+                 n_estimators=10,
+                 step=1,
+                 slice_size=(3,3),
+                 n_jobs=-1,
+                 notALabelFlag=0):
         """
         " notALabelFlag, the value in y which does not correspond to a label (ie unlabeled coordinate)
         """
-        self.n_job = n_job if n_job > 0 else max(psutil.cpu_count() + n_job + 1,1)
+        self.n_jobs = n_jobs if n_jobs > 0 else max(psutil.cpu_count() + n_jobs + 1,1)
         self.n_estimators = n_estimators
         self.base_estimator = base_estimator
+        self.choice_function = choice_function
         self.step = min(step,1)
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
@@ -90,13 +98,13 @@ class SpectralModel:
 
         self.estimators = []
         ln = len(y)
-        indexes = [list(range(ln)) for i in range(self.n_job)]
-        pool = ThreadPool(self.n_job)
+        indexes = [list(range(ln)) for i in range(self.n_jobs)]
+        pool = ThreadPool(self.n_jobs)
         st = 0
         try:
             for i in range(self.n_estimators + 1):
-                np.random.shuffle(indexes[int(i%self.n_job)])
-                if i and i % self.n_job == 0 or i == self.n_estimators:
+                np.random.shuffle(indexes[int(i%self.n_jobs)])
+                if i and i % self.n_jobs == 0 or i == self.n_estimators:
                     print(i-st)
                     self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
                     st = i
@@ -114,11 +122,11 @@ class SpectralModel:
         Xdata = np.array(Xdata)
 
         ylabels = []
-        pool = ThreadPool(self.n_job)
+        pool = ThreadPool(self.n_jobs)
         st = 0
         try:
             for i in range(self.n_estimators):
-                if i and i % self.n_job == 0 or i == self.n_estimators-1:
+                if i and i % self.n_jobs == 0 or i == self.n_estimators-1:
                     ylabels.extend(pool.map(predict,[(self.estimators[j],Xdata) for j in range(st,i+1)]))
                     st = i
         finally:
@@ -131,7 +139,7 @@ class SpectralModel:
 
         for i,labels in enumerate(ylabels):
             label,count = np.unique(labels,True)
-            label = label[np.argmax(count)]
+            label = label[self.choice_function(count)]
             y[coord[i][0],coord[i][1]] = label
 
         return y
