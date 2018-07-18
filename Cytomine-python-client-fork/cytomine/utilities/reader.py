@@ -445,19 +445,19 @@ class CytomineSpectralReader(Reader):
           return sp
 
         if async:
-            self.results.appendleft((self.pool.map_async(getRect,rects),True,tuple(tile)))
+            self.results.appendleft({"result":self.pool.map_async(getRect,rects),"async":True,"tile":tuple(tile)})
         else:
-            self.results.appendleft((self.pool.map(getRect,rects),False,tuple(tile)))
+            self.results.appendleft({"result":self.pool.map(getRect,rects),"async":False,"tile":tuple(tile)})
 
     def getResult(self,all_coord=True,in_list=False):
 
         #self.results a queue of (map/map_result,is_async,tile_coord)
         if len(self.results):
             result = self.results.pop()
-            if result[1]:
-                list_collections = result[0].get()
+            if result["async"]:
+                list_collections = result["result"].get()
             else:
-                list_collections = list(result[0])
+                list_collections = list(result["result"])
 
             if len(list_collections):
                 num_spectra = 0
@@ -468,12 +468,11 @@ class CytomineSpectralReader(Reader):
                 if not num_spectra:
                     return
                 if not in_list:
-                    image = np.zeros((result[2][2],result[2][3],num_spectra),dtype=np.uint8)
+                    image = np.zeros((result["tile"][2],result["tile"][3],num_spectra),dtype=np.uint8)
                     if all_coord:
-
-                        image_coord = np.zeros((result[2][2],result[2][3],2))
+                        image_coord = np.zeros((result["tile"][2],result["tile"][3],2))
                     else:
-                        image_coord = np.asarray(result[2])
+                        image_coord = np.asarray(result["tile"])
                 else:
                     image = []
                     image_coord = []
@@ -482,7 +481,7 @@ class CytomineSpectralReader(Reader):
                     for spectra in collection:
 
                         if not in_list:
-                            position = (abs(result[2][0] - spectra['pxl'][0]),abs(result[2][1] - spectra['pxl'][1]))
+                            position = (abs(result["tile"][0] - spectra['pxl'][0]),abs(result["tile"][1] - spectra['pxl'][1]))
                             image[position] = spectra['spectra']
                             if all_coord:
                                 image_coord[position] = spectra['pxl']

@@ -42,12 +42,12 @@ import numpy as np
 from cytomine.utilities import Bounds, CytomineSpectralReader
 from cytomine.spectral import coordonatesToPolygons,polygonToAnnotation
 
-from cytomine.models import User,CurrentUser,Job,Annotation
+from cytomine.models import Annotation
 
 from multiprocessing import Pool
 
 from cytomine import CytomineJob
-
+import logging
 
 def main(argv):
     current_path = os.getcwd() +'/'+ os.path.dirname(__file__)
@@ -62,7 +62,7 @@ def main(argv):
       #Initialization
       print("TIME : %s" %strftime("%Y-%m-%d %H:%M:%S", localtime()))
       print("Loading prediction model (local)")
-      with open(os.path.join(cj.parameters.model_path,cj.parameters.model_name), "rb") as fb:
+      with open(os.path.join(cj.parameters.model_path,cj.parameters.model_name), "rb") as fp:
           classifier = pickle.load(fp)
       if hasattr(classifier,"set_N_Jobs"):
           classifier.set_N_Jobs(cj.parameters.model_nb_jobs)
@@ -118,57 +118,57 @@ def main(argv):
 
       iterate = 5
       pool = Pool(n_jobs)
+      try:
+          while not stop:
+              for i in range(iterate):
+                  reader.read(async=True)
+                  if not reader.next():
+                      stop = True
+                      break
+              fetch = []
+              coords = []
+              if not stop:
+                  it = iterate
+              else:
+                  it = iterate*2
+              for i in range(it):
+                  result = reader.getResult(all_coord=True,in_list=False)
+                  if result is None: #that means no result left to fetch
+                      break
+                  else:
+                      spectras,coord = result
+                      fetch.extend(spectras)
+                      coords.extend(coord.flatten)
+              fetch = np.asarray(fetch)
 
-      while not stop:
-        for i in range(iterate):
-          reader.read(async=True)
-          if not reader.next():
-            stop = True
-            break
-        fetch = []
-        coords = []
-        if not stop:
-          it = iterate
-        else:
-          it = iterate*2
-        for i in range(it):
-          result = reader.getResult(all_coord=True,in_list=True)
-          if result is None: #that means no results left to fetch
-            break
-          else:
-            spectras,coord = result
-            fetch.extend(spectras)
-            coords.extend(coord.flatten)
-        fetch = np.asarray(fetch)
+              #make prediction here
+              predictions = classifier.predict(fetch)
 
-        #make prediction here
-        predictions = classifier.predict(fetch)
+              #get the coordonate of the pxl that correspond to the request
+              coord = [reader.reverseHeight(coord[index[0],index[1]]) for index in np.argwhere(predictions==predict_term)]
+              if len(coord):
+                  results = results.union(coordonatesToPolygons(coord,nb_job=n_jobs,pool=pool,trim=False))
 
-        #get the coordonate of the pxl that correspond to the request
-        coord = [reader.reverseHeight(coord[index[0]]) for index in np.argwhere(predictions==predict_term)]
-        if len(coord):
-          results = results.union(coordonatesToPolygons(coord,nb_job=n_jobs,pool,False))
+          reader.first_id
 
-      reader.first_id
+          Annotation()
+          results = results.buffer(-0.5).simplify(1,False)
 
-      Annotation()
-      results = results.buffer(-0.5).simplify(1,False)
+          cj.job.update(statusComment = "Converting ROI to polygon", progress = 70)
 
-      cj.job.update(statusComment = "Converting ROI to polygon", progress = 70)
+          amp = pool.map(polygonToAnnotation,[p for p in results])
 
-      amp = pool.map(polygonToAnnotation,[p for p in resuls])
+          cj.job.update(statusComment = "Uploading of the annotations on the first image of the imagegroup", progress = 95)
 
-      cj.job.update(statusComment = "Uploading of the annotations on the first image of the imagegroup", progress = 95)
-
-      for p in amp:
-        Annotation(p,reader.first_id,
-                   id_terms=predict_term,
-                   id_project=id_project).save()
+          for p in amp:
+              Annotation(p,reader.first_id,
+                         id_terms=predict_term,
+                         id_project=id_project).save()
 
 
-      cj.job.update(statusComment = "Finish Job..", progress = 100)
-
-      pool.close()
+          cj.job.update(statusComment = "Finish Job..", progress = 100)
+      finally:
+          pool.close()
 
 
 if __name__ == "__main__":
