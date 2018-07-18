@@ -106,7 +106,6 @@ class SpectralModel:
             for i in range(self.n_estimators + 1):
                 np.random.shuffle(indexes[int(i%self.n_jobs)])
                 if i and i % self.n_jobs == 0 or i == self.n_estimators:
-                    print(i-st)
                     self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
                     st = i
         finally:
