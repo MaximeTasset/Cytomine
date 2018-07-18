@@ -29,7 +29,7 @@ from cytomine import CytomineJob
 import pickle
 
 import logging
-from sklearn.tree import ExtraTreeClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 
 
 def main(argv):
@@ -89,13 +89,12 @@ def main(argv):
 
       # Part that can be modify for the model
       def estimator():
-        return ExtraTreeClassifier(n_estimators=n_estimators,min_samples_split=min_samples_split,max_features=max_features,n_jobs=n_jobs)
+        return ExtraTreesClassifier(min_samples_split=min_samples_split,max_features=max_features,n_estimators=n_estimators,n_jobs=n_jobs)
 
-      # As we use ExtrTreeClassifer as model, we hard set the 'n_estimators'n 'use' and the 'n_jobs' to 1.
-      # (ie the ExtraTreeClassifier take care of this parameter)
+      # As we use the ExtraTreesClassifier, we fixe the 'n_estimators', 'n_jobs' and 'use' parameters to 1
       sm = SpectralModel(base_estimator=estimator,n_estimators=1,step=step,slice_size=slice_size,n_jobs=1)
-      use = use
-      sm.fit(X,y,use=1)
+      use = 1
+      sm.fit(X,y,use=use)
 
 
       print("Saving The Model...")

@@ -84,6 +84,9 @@ if __name__ == "__main__":
                    "--cytomine_users_annotation",'', #the annotations which have as user, one in the list will be used, not the others (note: if '' all annotation will be used)
                    "--cytomine_imagegroup",'', #list of the project imagegroup's id that will be used (note: if '' all imagegroup will be used)
                    "--n_jobs",str(4),
+                   "--step",str(1),
+                   "--data_by_estimator",str(1),
+                   "--slice_size",str(3),
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
