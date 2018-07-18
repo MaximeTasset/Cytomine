@@ -24,11 +24,11 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 from cytomine import Cytomine
 from cytomine.models import Software, SoftwareParameter,SoftwareProject
 
+save_path = "./tmp"
 cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
-save_path = "/tmp"
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
@@ -54,7 +54,7 @@ def main(argv):
         SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000).save()
         SoftwareParameter("step", type="Number", id_software=software.id, default_value=1, index=1100).save()
         SoftwareParameter("slice_size", type="Number", id_software=software.id, default_value=3, index=1200).save()
-        SoftwareParameter("data_by_estimator", type="Number", id_software=software.id, default_value=0.8, index=1300).save()
+        SoftwareParameter("data_by_estimator", type="Number", id_software=software.id, default_value=1, index=1300).save()
 
         SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1500).save()
         SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1600).save()
@@ -77,7 +77,7 @@ if __name__ == "__main__":
               "--cytomine_public_key",cytomine_public_key,
               "--cytomine_private_key",cytomine_private_key]
       software = main(argv)
-      from feature_selection import main as main_feature
+      from model_prediction import main as main_model
       argv.extend(["--cytomine_id_project",str(id_project),
                    "--cytomine_id_software",str(software.id),
                    "--cytomine_predict_term",'', #list of the terms names used for the feature selection format 'name1,name2,name3' (note: if '', all terms will be used)
@@ -87,9 +87,9 @@ if __name__ == "__main__":
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
-                   "--save_path",save_path]) # complete path where the 'results.csv' will be saved
+                   "--save_path",save_path]) # complete path where the 'model.pickle' will be saved
       try:
-        job = main_feature(argv)
+        job = main_model(argv)
       finally:
 
         with Cytomine(host="demo.cytomine.be", public_key=cytomine_public_key, private_key=cytomine_private_key,

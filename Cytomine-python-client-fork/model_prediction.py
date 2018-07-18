@@ -29,6 +29,8 @@ from cytomine import CytomineJob
 import pickle
 
 import logging
+from sklearn.tree import ExtraTreeClassifier
+
 
 def main(argv):
   with CytomineJob.from_cli(argv,verbose=logging.WARNING) as cj:
@@ -36,9 +38,9 @@ def main(argv):
 
       save_path = cj.parameters.save_path
       try:
-          max_features = int(cj.parameters.forest_n_estimators)
+          max_features = int(cj.parameters.forest_max_features)
       except ValueError:
-          max_features = cj.parameters.forest_n_estimators
+          max_features = cj.parameters.forest_max_features
 
       n_estimators = cj.parameters.forest_n_estimators
       min_samples_split = cj.parameters.forest_min_samples_split
@@ -77,7 +79,6 @@ def main(argv):
       ext.loadDataFromCytomine(imagegroup_id_list=imagegroup_ids,id_project = id_project,
                                id_users=users_annotation,predict_terms_list=predict_terms_list)
 
-
       os.makedirs(save_path,exist_ok=True)
 
       print("Fitting Model...")
@@ -85,8 +86,17 @@ def main(argv):
 
       X = [x for x,y in ext.rois]
       y = [y for x,y in ext.rois]
-      sm = SpectralModel(n_estimators=n_estimators,step=step,slice_size=slice_size,n_jobs=n_jobs)
-      sm.fit(X,y,use)
+
+      # Part that can be modify for the model
+      def estimator():
+        return ExtraTreeClassifier(n_estimators=n_estimators,min_samples_split=min_samples_split,max_features=max_features,n_jobs=n_jobs)
+
+      # As we use ExtrTreeClassifer as model, we hard set the 'n_estimators'n 'use' and the 'n_jobs' to 1.
+      # (ie the ExtraTreeClassifier take care of this parameter)
+      sm = SpectralModel(base_estimator=estimator,n_estimators=1,step=step,slice_size=slice_size,n_jobs=1)
+      use = use
+      sm.fit(X,y,use=1)
+
 
       print("Saving The Model...")
       cj.job.update(statusComment = "Saving The Model...", progress = 95)
@@ -95,12 +105,6 @@ def main(argv):
 
       cj.job.update(statusComment = "Finished.", progress = 100)
       return cj.job
-
-def update_job_status(job, status, status_comment, progress):
-    job.status = status if status else job.status
-    job.statusComment = status_comment if status_comment else job.statusComment
-    job.progress = progress if progress else job.progress
-    job.update()
 
 if __name__ == "__main__":
     import sys

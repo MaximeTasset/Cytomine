@@ -38,9 +38,9 @@ def main(argv):
 
       save_path = cj.parameters.save_path
       try:
-          max_features = int(cj.parameters.forest_n_estimators)
+          max_features = int(cj.parameters.forest_max_features)
       except ValueError:
-          max_features = cj.parameters.forest_n_estimators
+          max_features = cj.parameters.forest_max_features
 
 
       n_estimators = cj.parameters.forest_n_estimators
