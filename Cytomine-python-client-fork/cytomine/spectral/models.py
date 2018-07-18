@@ -88,6 +88,7 @@ class SpectralModel:
         self.step = min(step,1)
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
+        self.estimators = []
 
     def fit(self,X,y,use=0.8):
         """

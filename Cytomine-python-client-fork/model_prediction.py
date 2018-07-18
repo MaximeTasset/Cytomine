@@ -96,6 +96,8 @@ def main(argv):
       use = 1
       sm.fit(X,y,use=use)
 
+      #remove unpickable 'base_estimator' attribute
+      del sm.base_estimator
 
       print("Saving The Model...")
       cj.job.update(statusComment = "Saving The Model...", progress = 95)
