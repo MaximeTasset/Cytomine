@@ -32,7 +32,7 @@ id_project= XXX
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):
-        software = Software(name="Feature_Selection",
+        software = Software(name="Build_Simple_Model",
                             service_name="pyxitSuggestedTermJobService",
                             result_name="ValidateAnnotation").save()
 
