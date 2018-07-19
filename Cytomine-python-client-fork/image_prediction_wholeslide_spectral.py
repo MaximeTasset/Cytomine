@@ -36,23 +36,22 @@ import pickle
 import os
 from time import localtime, strftime
 
-from shapely.geometry import Polygon,MultiPolygon
+from shapely.geometry import MultiPolygon
 import numpy as np
 
-from cytomine.utilities import Bounds, CytomineSpectralReader
+from cytomine.utilities.reader import Bounds, CytomineSpectralReader
 from cytomine.spectral import coordonatesToPolygons,polygonToAnnotation
 
-from cytomine.models import Annotation
+from cytomine.models import Annotation,TermCollection
 
 from multiprocessing import Pool
 
 from cytomine import CytomineJob
 import logging
+import json
 
 def main(argv):
-    current_path = os.getcwd() +'/'+ os.path.dirname(__file__)
-    # Define command line options
-
+#    current_path = os.getcwd() +'/'+ os.path.dirname(__file__)
 
     print("Main function")
     with CytomineJob.from_cli(argv,verbose=logging.WARNING) as cj:
@@ -70,8 +69,24 @@ def main(argv):
           classifier.n_jobs = cj.parameters.model_nb_jobs
 
       n_jobs = cj.parameters.n_jobs
+
       n_jobs_reader = cj.parameters.n_jobs_reader
-      predict_term = cj.parameters.cytomine_predict_term
+      termCollection = TermCollection(filters={'project':id_project}).fetch()
+      if cj.parameters.cytomine_predict_term != '':
+          terms_name = json.loads(cj.parameters.cytomine_predict_term)
+          if type(terms_name) == dict:
+            terms_name = terms_name["collection"]
+
+          if type(terms_name) == list:
+            if not len(terms_name):
+              predict_term_list = [term for term in classifier.labels]
+            elif type(terms_name[0]) == str:
+               predict_term_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in classifier.labels]
+               if not len(predict_term_list):
+                 predict_term_list = [term for term in classifier.labels]
+
+      else:
+          predict_term_list = [term for term in classifier.labels]
 
       #Reading parameters
       id_imagegroup= cj.parameters.cytomine_imagegroup
@@ -102,7 +117,7 @@ def main(argv):
 
       cj.job.update(statusComment = "Start fetching data", progress = 5)
 
-      results = MultiPolygon()
+      results = {predict_term:MultiPolygon() for predict_term in predict_term_list}
 
       cj.job.update(statusComment = "Initial read", progress = 6)
 
@@ -145,33 +160,29 @@ def main(argv):
               predictions = [classifier.predict(fetch) for fetch in fetched_data]
 
               #get the coordonate of the pxl that correspond to the request
-              coord = [reader.reverseHeight(coords[i][index[0],index[1]]) for i,prediction in enumerate(predictions) for index in np.argwhere(prediction==predict_term)]
+              wanted_coords = {predict_term:[reader.reverseHeight(coords[i][index[0],index[1]]) for i,prediction in enumerate(predictions)
+                                                                           for index in np.argwhere(prediction==predict_term)]
+                                                                           for predict_term in predict_term_list}
+              for predict_term in wanted_coords:
+                  coords = wanted_coords[predict_term]
+                  if len(coords):
+                      results[predict_term] = results[predict_term].union(coordonatesToPolygons(coords,nb_job=n_jobs,pool=pool,trim=False))
 
-              if len(coord):
-                  results = results.union(coordonatesToPolygons(coord,nb_job=n_jobs,pool=pool,trim=False))
 
-
-          Annotation()
-          results = results.buffer(-0.5).simplify(1,False)
+          results = {predict_term:results[predict_term].buffer(-0.5).simplify(1,False)}
 
           cj.job.update(statusComment = "Converting ROI to polygon", progress = 70)
 
-          amp = pool.map(polygonToAnnotation,[p for p in results])
+          amp = {predict_term:pool.map(polygonToAnnotation,[p for p in results[predict_term]]) for predict_term in results}
 
           cj.job.update(statusComment = "Uploading of the annotations on the first image of the imagegroup", progress = 95)
 
-          for p in amp:
-              Annotation(p,reader.first_id,
-                         id_terms=predict_term,
-                         id_project=id_project).save()
-
+          for predict_term in amp:
+              for p in amp[predict_term]:
+                  Annotation(p,reader.first_id,
+                             id_terms=predict_term,
+                             id_project=id_project).save()
 
           cj.job.update(statusComment = "Finish Job..", progress = 100)
       finally:
           pool.close()
-
-
-if __name__ == "__main__":
-    import sys
-    exit(0)
-    main(sys.argv[1:])

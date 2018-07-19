@@ -54,14 +54,14 @@ def main(argv):
 
           if type(terms_name) == list:
             if not len(terms_name):
-              positive_predict_terms_list = None
+              predict_term_list = [term.id for term in termCollection]
             elif type(terms_name[0]) == str:
-               predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name]
-               if not len(predict_terms_list):
-                 predict_terms_list = [term.id for term in termCollection]
+               predict_term_list = [term.id for term in termCollection if str(term.name) in terms_name]
+               if not len(predict_term_list):
+                 predict_term_list = [term.id for term in termCollection]
 
       else:
-          predict_terms_list = [term.id for term in termCollection]
+          predict_term_list = [term.id for term in termCollection]
 
       if cj.parameters.cytomine_positive_predict_term != '':
           terms_name = json.loads(cj.parameters.cytomine_positive_predict_term)
@@ -70,18 +70,18 @@ def main(argv):
 
           if type(terms_name) == list:
             if not len(terms_name):
-              positive_predict_terms_list = None
+              positive_predict_term_list = None
             elif type(terms_name[0]) != str:
               terms_name = [term["name"] for term in terms_name]
 
-            positive_predict_terms_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in predict_terms_list]
-            if not len(positive_predict_terms_list):
-              positive_predict_terms_list = None
+            positive_predict_term_list = [term.id for term in termCollection if str(term.name) in terms_name and term.id in predict_term_list]
+            if not len(positive_predict_term_list):
+              positive_predict_term_list = None
 
           else:
-            positive_predict_terms_list = None
+            positive_predict_term_list = None
       else:
-          positive_predict_terms_list = None
+          positive_predict_term_list = None
 
       if cj.parameters.cytomine_users_annotation != '':
           users_annotation = json.loads(cj.parameters.cytomine_users_annotation)
@@ -132,15 +132,15 @@ def main(argv):
 
 
       ext.loadDataFromCytomine(imagegroup_id_list=imagegroup_ids,id_project = id_project,
-                               id_users=users_annotation,predict_terms_list=predict_terms_list)
+                               id_users=users_annotation,predict_term_list=predict_term_list)
 
 
       os.makedirs(save_path,exist_ok=True)
 
-      if positive_predict_terms_list is not None:
+      if positive_predict_term_list is not None:
           cj.job.update(statusComment = "Regrouping Positive terms...", progress = 50)
           positive_id = max(ext.Y) + 1
-          for pos_id in positive_predict_terms_list:
+          for pos_id in positive_predict_term_list:
               ext.Y[ext.Y == pos_id] = positive_id
       print("Feature Selection...")
       cj.job.update(statusComment = "Feature Selection...", progress = 55)

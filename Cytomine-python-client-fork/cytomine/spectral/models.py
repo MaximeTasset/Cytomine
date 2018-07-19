@@ -88,7 +88,6 @@ class SpectralModel:
         self.step = min(step,1)
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
-        self.estimators = []
 
     def fit(self,X,y,use=0.8):
         """
@@ -96,7 +95,7 @@ class SpectralModel:
         " y: a list of n array-like of shape =(width,heigth) The target values (class labels).
         """
         X,y = Extractor().rois2data(zip(X,y),self.sliceSize,self.step,self.notALabelFlag)
-
+        self.labels = np.unique(y)
         self.estimators = []
         ln = len(y)
         indexes = [list(range(ln)) for i in range(self.n_jobs)]

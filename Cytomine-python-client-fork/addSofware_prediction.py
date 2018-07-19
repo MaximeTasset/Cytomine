@@ -30,6 +30,12 @@ cytomine_private_key="XXX"
 id_project= XXX
 save_path = "/tmp"
 
+startx = 0
+starty = 0
+endx = 100
+endy = 100
+
+
 def main(argv):
     with Cytomine.connect_from_cli(argv):
         software = Software(name="Feature_Selection",
@@ -88,7 +94,10 @@ if __name__ == "__main__":
                    "--cytomine_positive_predict_term",'', #list of the terms names that will be merge format 'name1,name2,name3' (note: if '', no merge)
                    "--cytomine_users_annotation",'', #the annotations which have as user, one in the list will be used, not the others (note: if '' all annotation will be used)
                    "--cytomine_imagegroup",'', #list of the project imagegroup's id that will be used (note: if '' all imagegroup will be used)
+                   "--startx",str(0),
+                   "--startx",str(0),
                    "--n_jobs",str(4),
+                   "--model_path",save_path,
                    "--forest_max_features","auto",
                    "--forest_n_estimators",str(10),
                    "--forest_min_samples_split",str(2),
