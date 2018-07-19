@@ -115,7 +115,8 @@ class SpectralModel:
 
     def predict(self,X):
         """
-        " X: array-like or sparse matrix, shape=(width,heigth, n_features) Training instances to unlabeled clusters.
+        " X: array-like or sparse matrix, shape=(width,heigth, n_features)
+        "
         """
 
         Xdata,coord = roi2data(X,self.sliceSize,self.step,splitted=True)

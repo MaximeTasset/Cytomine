@@ -125,7 +125,7 @@ def main(argv):
                   if not reader.next():
                       stop = True
                       break
-              fetch = []
+              fetched_data = []
               coords = []
               if not stop:
                   it = iterate
@@ -137,19 +137,19 @@ def main(argv):
                       break
                   else:
                       spectras,coord = result
-                      fetch.extend(spectras)
-                      coords.extend(coord.flatten)
-              fetch = np.asarray(fetch)
+                      fetched_data.append(spectras)
+                      coords.append(coord)
 
               #make prediction here
-              predictions = classifier.predict(fetch)
+
+              predictions = [classifier.predict(fetch) for fetch in fetched_data]
 
               #get the coordonate of the pxl that correspond to the request
-              coord = [reader.reverseHeight(coord[index[0],index[1]]) for index in np.argwhere(predictions==predict_term)]
+              coord = [reader.reverseHeight(coords[i][index[0],index[1]]) for i,prediction in enumerate(predictions) for index in np.argwhere(prediction==predict_term)]
+
               if len(coord):
                   results = results.union(coordonatesToPolygons(coord,nb_job=n_jobs,pool=pool,trim=False))
 
-          reader.first_id
 
           Annotation()
           results = results.buffer(-0.5).simplify(1,False)
