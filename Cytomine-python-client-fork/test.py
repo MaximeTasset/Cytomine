@@ -176,7 +176,7 @@ def test_comparaisonFeatureImportance():
     plt.plot(n_feature,f_c_score,label="f_classif")
     plt.plot(n_feature,sum_score,label="sum")
     plt.legend()
-    plt.show()
+    plt.savefig("comparaison_feature_imp.png")
 
     return pca_score, imp_score, f_c_score, chi2_score, sum_score, n_feature
 
