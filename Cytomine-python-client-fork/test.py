@@ -30,13 +30,29 @@ from cytomine.spectral.extractor import Extractor
 import matplotlib.pyplot as plt
 import numpy as np
 
+cytomine_host="demo.cytomine.be"
+cytomine_public_key="XXX"
+cytomine_private_key="XXX"
+id_project=0
+
+n_jobs = 3
 test = .2
 validation = .1
 train = test + validation
 
-print("load data from file")
 ext = Extractor("extractedData.save")
-ext.readFile()
+try:
+    print("load data from file")
+    ext.readFile()
+except FileNotFoundError:
+    print("File not found... Trying to fetch it from Cytomine")
+    from cytomine import Cytomine
+    import logging
+    with Cytomine(cytomine_host,cytomine_public_key,cytomine_private_key,verbose=logging.WARNING):
+      ext.loadDataFromCytomine(id_project=id_project)
+      print("Saving data to file for later uses")
+      ext.writeFile()
+
 print("fit_transform pca")
 pca = PCA().fit(ext.X)
 print("transform")
@@ -45,7 +61,7 @@ X = pca.transform(ext.X)
 indexes = list(range(X.shape[0]))
 shuffle(indexes)
 
-etc = ETC(n_jobs=3,n_estimators=100)
+etc = ETC(n_jobs=n_jobs,n_estimators=100)
 
 def test_comparaisonFeatureImportance():
 
