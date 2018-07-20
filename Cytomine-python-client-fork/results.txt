@@ -1,0 +1,240 @@
+load data from file
+fit_transform pca
+transform
+getting feature importances from ETC
+getting feature importances from f_classif
+D:\Anaconda3\lib\site-packages\sklearn\feature_selection\univariate_selection.py:113: UserWarning: Features [ 792  800  810  822  835  836  838  849  851  852  854  865  867  869
+  870  883  885  887  889  890  892  905  907  909  911  942  944  953
+  954  956  965  967  968  970  979  981  983  984  986  997  999 1001
+ 1002 1015 1017 1019 1021 1034 1042 1052 1063 1064 1075 1077 1078 1089
+ 1091 1093 1094 1105 1107 1109 1111 1141 1151 1153 1163 1165 1167 1177
+ 1179 1181 1183 1203 1211 1213 1221 1223 1225 1233 1235 1237 1239 1251
+ 1257 1269 1281] are constant.
+  UserWarning)
+D:\Anaconda3\lib\site-packages\sklearn\feature_selection\univariate_selection.py:114: RuntimeWarning: invalid value encountered in true_divide
+  f = msb / msw
+getting feature importances from chi2
+getting sum of ETC, chi2 and f_classif
+train set size: 34640
+test set size: 9897
+validation set size: 4948
+
+Scores with best 1650 features/components:
+
+Scores before PCA:
+         -imp : 0.9461452965545115
+         -f_classif :   0.9457411336768717
+         -chi2 :        0.9455390522380519
+         -Sum : 0.9436192785692634
+Score after PCA: 0.8512680610285945
+
+Scores with best 1550 features/components:
+
+Scores before PCA:
+         -imp : 0.945438011518642
+         -f_classif :   0.9447307264827726
+         -chi2 :        0.9455390522380519
+         -Sum : 0.940284934828736
+Score after PCA: 0.8407598262099626
+
+Scores with best 1450 features/components:
+
+Scores before PCA:
+         -imp : 0.9465494594321512
+         -f_classif :   0.9463473779933314
+         -chi2 :        0.9453369707992321
+         -Sum : 0.9393755683540467
+Score after PCA: 0.8495503687986259
+
+Scores with best 1350 features/components:
+
+Scores before PCA:
+         -imp : 0.9478629887844802
+         -f_classif :   0.9469536223097909
+         -chi2 :        0.9442255228857229
+         -Sum : 0.9384662018793574
+Score after PCA: 0.8547034454885318
+
+Scores with best 1250 features/components:
+
+Scores before PCA:
+         -imp : 0.9453369707992321
+         -f_classif :   0.9435182378498534
+         -chi2 :        0.9459432151156916
+         -Sum : 0.9377589168434879
+Score after PCA: 0.8644033545518844
+
+Scores with best 1150 features/components:
+
+Scores before PCA:
+         -imp : 0.9473577851874305
+         -f_classif :   0.9456400929574619
+         -chi2 :        0.9458421743962817
+         -Sum : 0.9352328988582399
+Score after PCA: 0.862382540163686
+
+Scores with best 1050 features/components:
+
+Scores before PCA:
+         -imp : 0.9480650702233
+         -f_classif :   0.9443265636051329
+         -chi2 :        0.946650500151561
+         -Sum : 0.9336162473476811
+Score after PCA: 0.8699605941194302
+
+Scores with best 950 features/components:
+
+Scores before PCA:
+         -imp : 0.9483681923815298
+         -f_classif :   0.9419015863392948
+         -chi2 :        0.9435182378498534
+         -Sum : 0.9301808628877437
+Score after PCA: 0.8719814085076286
+
+Scores with best 850 features/components:
+
+Scores before PCA:
+         -imp : 0.9472567444680207
+         -f_classif :   0.9443265636051329
+         -chi2 :        0.9438213600080833
+         -Sum : 0.9270486005860362
+Score after PCA: 0.8820854804486208
+
+Scores with best 750 features/components:
+
+Scores before PCA:
+         -imp : 0.9462463372739214
+         -f_classif :   0.9352328988582399
+         -chi2 :        0.9345256138223704
+         -Sum : 0.9271496413054461
+Score after PCA: 0.8864302313832475
+
+Scores with best 650 features/components:
+
+Scores before PCA:
+         -imp : 0.9486713145397595
+         -f_classif :   0.9356370617358796
+         -chi2 :        0.9364453874911589
+         -Sum : 0.9204809538243912
+Score after PCA: 0.8874406385773467
+
+Scores with best 550 features/components:
+
+Scores before PCA:
+         -imp : 0.9486713145397595
+         -f_classif :   0.9360412246135192
+         -chi2 :        0.9365464282105689
+         -Sum : 0.9118924926745479
+Score after PCA: 0.8944124482166314
+
+Scores with best 450 features/components:
+
+Scores before PCA:
+         -imp : 0.9488733959785793
+         -f_classif :   0.9384662018793574
+         -chi2 :        0.9382641204405375
+         -Sum : 0.9006769728200464
+Score after PCA: 0.9027988279276549
+
+Scores with best 350 features/components:
+
+Scores before PCA:
+         -imp : 0.9476609073456603
+         -f_classif :   0.9390724461958169
+         -chi2 :        0.9353339395776498
+         -Sum : 0.8775386480751743
+Score after PCA: 0.9044154794382137
+
+Scores with best 250 features/components:
+
+Scores before PCA:
+         -imp : 0.9495806810144488
+         -f_classif :   0.9439224007274932
+         -chi2 :        0.9331110437506315
+         -Sum : 0.8453066585834091
+Score after PCA: 0.9151257956956653
+
+Scores with best 150 features/components:
+
+Scores before PCA:
+         -imp : 0.9438213600080833
+         -f_classif :   0.9408911791451955
+         -chi2 :        0.9317975143983025
+         -Sum : 0.6053349499848439
+Score after PCA: 0.9230069718096393
+
+Scores with best 50 features/components:
+
+Scores before PCA:
+         -imp : 0.9365464282105689
+         -f_classif :   0.938971405476407
+         -chi2 :        0.9231080125290492
+         -Sum : 0.5775487521471153
+Score after PCA: 0.9290694149742346
+
+Scores with best 40 features/components:
+
+Scores before PCA:
+         -imp : 0.9337172880670911
+         -f_classif :   0.937657876124078
+         -chi2 :        0.9210871981408507
+         -Sum : 0.5775487521471153
+Score after PCA: 0.9170455693644539
+
+Scores with best 30 features/components:
+
+Scores before PCA:
+         -imp : 0.9221986460543599
+         -f_classif :   0.9328079215924018
+         -chi2 :        0.9192684651914722
+         -Sum : 0.5775487521471153
+Score after PCA: 0.9080529453369708
+
+Scores with best 20 features/components:
+
+Scores before PCA:
+         -imp : 0.907749823178741
+         -f_classif :   0.9263413155501667
+         -chi2 :        0.9089623118116601
+         -Sum : 0.5775487521471153
+Score after PCA: 0.9112862483580884
+
+Scores with best 10 features/components:
+
+Scores before PCA:
+         -imp : 0.9018894614529656
+         -f_classif :   0.9082550267757906
+         -chi2 :        0.9004748913812266
+         -Sum : 0.5775487521471153
+Score after PCA: 0.8940082853389916
+Bests tested on validation set:
+Score imp (with 1649 features): 0.9413904607922393 (test:       250)
+Score f_c (with 1649 features): 0.9385610347615198 (test:       1350)
+Score chi2 (with 1649 features):        0.9365400161681487 (test:       1050)
+Score sum (with 1649 features): 0.9375505254648343 (test:       1650)
+Score PCA (with 1649 cpts):     0.8425626515763945 (test:       50)
+fit_transform TSNE 2
+Score tsne2: 0.8826917247650803
+fit_transform TSNE 3
+Score tsne3: 0.8888552086490856
+train set size: 34632
+test set size: 9894
+validation set size: 4948
+Score with a slice size of 1:   0.9441075399231857
+train set size: 34597
+test set size: 9884
+validation set size: 4943
+Score with a slice size of 2:   0.9726831242411978
+train set size: 34443
+test set size: 9840
+validation set size: 4920
+Score with a slice size of 3:   0.9873983739837399
+train set size: 34370
+test set size: 9820
+validation set size: 4910
+Score with a slice size of 4:   0.9923625254582484
+train set size: 34124
+test set size: 9749
+validation set size: 4875
+Score with a slice size of 5:   0.9949738434711253
+Best score with a slice size of 5 (test set 0.9949738434711253):        0.9954871794871795 on the validation set
