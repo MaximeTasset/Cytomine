@@ -39,6 +39,7 @@ cytomine_private_key="XXX"
 id_project=0
 
 n_jobs = 3
+n_estimators = 100
 test = .2
 validation = .1
 train = test + validation
@@ -64,10 +65,14 @@ X = pca.transform(ext.X)
 indexes = list(range(X.shape[0]))
 shuffle(indexes)
 
-etc = ETC(n_jobs=n_jobs,n_estimators=100)
+print("ExtraTreesClassifier with {} estimators".format(n_estimators))
+etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
+
 
 def test_comparaisonFeatureImportance():
-
+    print("================================================")
+    print("Test: Comparaison Of Feature Importance Measure")
+    print("================================================")
     print("getting feature importances from ETC")
     imp_val = ext.features_ETC(n_estimators=100)
     imp = [i for imp,i in sorted(imp_val)]
@@ -185,11 +190,18 @@ def test_comparaisonFeatureImportance():
     return pca_score, imp_score, f_c_score, chi2_score, sum_score, n_feature
 
 def test_DimensionReduction():
+  print("================================================")
+  print("Test: explained variance ratio in PCA")
+  print("================================================")
   count = 0
   counts = [0]
   n_component = [0]
+  a = 0.9
   for i,c in enumerate(pca.explained_variance_ratio_):
       count += c
+      if count >= a:
+        print("ratio explained >= {:.2f} with {} components".format(a,i+1))
+        a += 0.01
       counts.append(count)
       n_component.append(i+1)
   plt.plot(n_component,counts)
@@ -216,6 +228,9 @@ def test_DimensionReduction():
 #  return tsne_score
 
 def test_Spaciality():
+  print("================================================")
+  print("Test: Spaciality Importance (tile size)")
+  print("================================================")
   best = (0,0,0)
   for i in range(1,6):
     X,y = ext.rois2data(None,(i,i))
