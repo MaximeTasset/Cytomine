@@ -29,6 +29,8 @@ from sklearn.decomposition import PCA
 from cytomine.spectral.extractor import Extractor
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+import pickle
 
 cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
@@ -121,7 +123,7 @@ def test_comparaisonFeatureImportance():
 
     best = {}
 
-    for i in sorted(list(set(list(range(0,1650,100))+list(range(1600,1650,10))))):
+    for i in sorted(list(set(list(range(0,1600,100))+list(range(1600,1650,1))))):
         print("\nScores with best {} features/components:\n".format(1650-i))
         n_feature.append(1650-i)
 
@@ -177,28 +179,40 @@ def test_comparaisonFeatureImportance():
     plt.plot(n_feature,sum_score,label="sum")
     plt.legend()
     plt.savefig("comparaison_feature_imp.png")
+    plt.close()
 
     return pca_score, imp_score, f_c_score, chi2_score, sum_score, n_feature
 
 def test_DimensionReduction():
   count = 0
+  counts = [0]
+  n_component = [0]
   for i,c in enumerate(pca.explained_variance_ratio_):
       count += c
-      if count >= 0.9:
-        break
+      counts.append(count)
+      n_component.append(i+1)
+  plt.plot(n_component,counts)
+  plt.savefig("explained_variance_ratio_pca.png")
+  plt.close()
+  return counts
+  # TSNE is really slow and doesn't have a transform method which disables
+  # its usage as dimension reduction method for machine learning.
+#  tsne_score = {}
+#  for name,n in [("tsne2",2),("tsne3",3)]:
+#      print("fit_transform TSNE {}".format(n))
+#      sys.stdout.fluch()
+#      tsne = TSNE(n,n_iter=1000).fit(X[:,:i+1])
+#      with open("tsne-{}.pickle".format(n),'wb') as f:
+#          pickle.dump(tsne,f)
+#      tsne = tsne.transform(X[:,:i+1])
+#      test_SampleTSNE_X,test_SampleTSNE_Y = tsne[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]]
+#      train_SampleTSNE_X,train_SampleTSNE_Y = tsne[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]]
+#      etc.fit(train_SampleTSNE_X,train_SampleTSNE_Y)
+#      score = etc.score(test_SampleTSNE_X,test_SampleTSNE_Y)
+#      tsne_score[name] = score
+#      print("Score {}: {}".format(name,score))
 
-  tsne_score = {}
-  for name,n in [("tsne2",2),("tsne3",3)]:
-      print("fit_transform TSNE {}".format(n))
-      tsne = TSNE(n,n_iter=1000).fit_transform(X[:,:i+1])
-      test_SampleTSNE_X,test_SampleTSNE_Y = tsne[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]]
-      train_SampleTSNE_X,train_SampleTSNE_Y = tsne[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]]
-      etc.fit(train_SampleTSNE_X,train_SampleTSNE_Y)
-      score = etc.score(test_SampleTSNE_X,test_SampleTSNE_Y)
-      tsne_score[name] = score
-      print("Score {}: {}".format(name,score))
-
-  return tsne_score
+#  return tsne_score
 
 def test_Spaciality():
   best = (0,0,0)
@@ -224,6 +238,7 @@ def test_Spaciality():
   print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
 
 if __name__ == '__main__':
+
   test_comparaisonFeatureImportance()
-  test_DimensionReduction()
+  counts = test_DimensionReduction()
   test_Spaciality()

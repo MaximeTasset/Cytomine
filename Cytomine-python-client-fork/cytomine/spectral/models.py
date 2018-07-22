@@ -144,6 +144,8 @@ class SpectralModel:
 
         return y
 
+
+
 def fit(arg):
     estimator,arg = arg
     estimator = estimator()
