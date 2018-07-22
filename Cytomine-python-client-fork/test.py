@@ -28,6 +28,7 @@ from numpy.random import shuffle
 from sklearn.decomposition import PCA
 from cytomine.spectral.extractor import Extractor
 import matplotlib.pyplot as plt
+plt.switch_backend("agg")
 import numpy as np
 import sys
 import pickle
@@ -238,7 +239,6 @@ def test_Spaciality():
   print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
 
 if __name__ == '__main__':
-
   test_comparaisonFeatureImportance()
   counts = test_DimensionReduction()
   test_Spaciality()
