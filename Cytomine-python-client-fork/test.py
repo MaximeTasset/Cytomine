@@ -208,6 +208,8 @@ def test_DimensionReduction():
       counts.append(count)
       n_component.append(i+1)
   plt.plot(n_component,counts)
+  plt.ylabel("Explained Variance Ratio")
+  plt.xlabel("Number Of Principal Components")
   plt.savefig("explained_variance_ratio_pca.png")
   plt.close()
   return counts
@@ -230,12 +232,36 @@ def test_DimensionReduction():
 
 #  return tsne_score
 
+def test_depth():
+  print("================================================")
+  print("Test: Depth Importance (etc max_depth)")
+  print("================================================")
+  max_depth = etc.max_depth
+
+  train_SampleX,train_SampleY = ext.X[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]]
+  test_SampleX,test_SampleY = ext.X[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]]
+#  val_SampleX,val_SampleY = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]],ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+  depth = 100
+  scores = []
+  for i in range(depth):
+      etc.max_depth = i + 1
+      etc.fit(train_SampleX,train_SampleY)
+      scores.append(etc.score(test_SampleX,test_SampleY))
+  plt.plot(range(1,depth+1),counts)
+  plt.ylabel("Score")
+  plt.xlabel("Max Depth")
+  plt.savefig("score_max_depth.png")
+  plt.close()
+
+  etc.max_depth = max_depth
+
+
 def test_Spaciality():
   print("================================================")
   print("Test: Spaciality Importance (tile size)")
   print("================================================")
   best = (0,0,0)
-  for i in range(1,6):
+  for i in range(1,11):
     X,y = ext.rois2data(None,(i,i))
     indexes = list(range(X.shape[0]))
     shuffle(indexes)
