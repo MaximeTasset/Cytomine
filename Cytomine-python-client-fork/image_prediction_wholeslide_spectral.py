@@ -91,7 +91,12 @@ def main(argv):
       #Reading parameters
       id_imagegroup= cj.parameters.cytomine_imagegroup
       tile_size = cj.parameters.cytomine_tile_size
-      overlap = cj.parameters.cytomine_overlap
+      if hasattr(classifier,"sliceSize"):
+          classif_slize = max(classifier.sliceSize)
+      else:
+          classif_slize = 0
+
+      overlap = max(cj.parameters.cytomine_overlap,classif_slize-1)
 
       cj.job.update(statusComment = "Initialization finished...")
 
