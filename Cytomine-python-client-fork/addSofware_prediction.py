@@ -28,7 +28,8 @@ cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
-save_path = "/tmp"
+
+save_path = "./tmp"
 
 startx = 0
 starty = 0

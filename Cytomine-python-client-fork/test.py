@@ -22,7 +22,7 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 
 
 from sklearn.ensemble import ExtraTreesClassifier as ETC
-from sklearn.manifold import TSNE
+#from sklearn.manifold import TSNE
 
 from numpy.random import shuffle
 from sklearn.decomposition import PCA
@@ -30,16 +30,16 @@ from cytomine.spectral.extractor import Extractor
 import matplotlib.pyplot as plt
 plt.switch_backend("agg")
 import numpy as np
-import sys
-import pickle
+#import sys
+#import pickle
 
 cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project=0
 
-n_jobs = 3
-n_estimators = 100
+n_jobs = 16
+n_estimators = 1000
 test = .2
 validation = .1
 train = test + validation
@@ -168,23 +168,26 @@ def test_comparaisonFeatureImportance():
 
     print("Bests tested on validation set:")
     for f in best:
-        score_test,i,f_imp = best[f]
+        n_feature_k,score_test,f_imp = best[f]
         if f == "pca":
-            etc.fit(train_SamplePCA_X[:,:int(1650-i)],train_SamplePCA_Y)
-            score = etc.score(val_SamplePCA_X[:,:int(1650-i)],val_SamplePCA_Y)
-            print("Score PCA (with {} cpts):\t{} (test:\t{})".format(int(1650-i),score,score_test))
+            etc.fit(train_SamplePCA_X[:,:int(n_feature_k)],train_SamplePCA_Y)
+            score = etc.score(val_SamplePCA_X[:,:int(n_feature_k)],val_SamplePCA_Y)
+            print("Score PCA (with {} cpts):\t{} (test:\t{})".format(n_feature_k,score,score_test))
         else:
-            etc.fit(train_SampleX[:,f_imp[:int(1650-i)]],train_SampleY)
-            score = etc.score(val_SampleX[:,f_imp[:int(1650-i)]],val_SampleY)
-            print("Score {} (with {} features):\t{} (test:\t{})".format(f,int(1650-i),score,score_test))
+            etc.fit(train_SampleX[:,f_imp[:int(n_feature_k)]],train_SampleY)
+            score = etc.score(val_SampleX[:,f_imp[:int(n_feature_k)]],val_SampleY)
+            print("Score {} (with {} features):\t{} (test:\t{})".format(f,n_feature_k,score,score_test))
 
     plt.plot(n_feature,pca_score,label="pca")
+
     plt.plot(n_feature,chi2_score,label="chi2")
     plt.plot(n_feature,imp_score,label="imp")
     plt.plot(n_feature,f_c_score,label="f_classif")
     plt.plot(n_feature,sum_score,label="sum")
+    plt.ylabel("Score")
+    plt.xlabel("Number Of Feature")
     plt.legend()
-    plt.savefig("comparaison_feature_imp.png")
+    plt.savefig("comparaison_feature_imp_{}.png".format(n_estimators))
     plt.close()
 
     return pca_score, imp_score, f_c_score, chi2_score, sum_score, n_feature
