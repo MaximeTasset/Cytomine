@@ -213,24 +213,6 @@ def test_DimensionReduction():
   plt.savefig("explained_variance_ratio_pca.png")
   plt.close()
   return counts
-  # TSNE is really slow and doesn't have a transform method which disables
-  # its usage as dimension reduction method for machine learning.
-#  tsne_score = {}
-#  for name,n in [("tsne2",2),("tsne3",3)]:
-#      print("fit_transform TSNE {}".format(n))
-#      sys.stdout.fluch()
-#      tsne = TSNE(n,n_iter=1000).fit(X[:,:i+1])
-#      with open("tsne-{}.pickle".format(n),'wb') as f:
-#          pickle.dump(tsne,f)
-#      tsne = tsne.transform(X[:,:i+1])
-#      test_SampleTSNE_X,test_SampleTSNE_Y = tsne[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]]
-#      train_SampleTSNE_X,train_SampleTSNE_Y = tsne[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]]
-#      etc.fit(train_SampleTSNE_X,train_SampleTSNE_Y)
-#      score = etc.score(test_SampleTSNE_X,test_SampleTSNE_Y)
-#      tsne_score[name] = score
-#      print("Score {}: {}".format(name,score))
-
-#  return tsne_score
 
 def test_depth():
   print("================================================")
@@ -247,7 +229,7 @@ def test_depth():
       etc.max_depth = i + 1
       etc.fit(train_SampleX,train_SampleY)
       scores.append(etc.score(test_SampleX,test_SampleY))
-  plt.plot(range(1,depth+1),counts)
+  plt.plot(range(1,depth+1),scores)
   plt.ylabel("Score")
   plt.xlabel("Max Depth")
   plt.savefig("score_max_depth.png")
@@ -286,3 +268,4 @@ if __name__ == '__main__':
   test_comparaisonFeatureImportance()
   counts = test_DimensionReduction()
   test_Spaciality()
+  test_depth()
