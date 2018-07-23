@@ -1,3 +1,4 @@
+100 estimators
 load data from file
 fit_transform pca
 transform
