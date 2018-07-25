@@ -83,6 +83,10 @@ def test_DimensionReduction():
         break
 
   tsne_score = {}
+  etc.fit(ext.X[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]])
+
+  print("Score with PCA: {}".format(etc.score(ext.X[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]])))
+
   for name,n in [("tsne2",2),("tsne3",3)]:
       print("fit_transform TSNE {}".format(n))
       sys.stdout.flush()

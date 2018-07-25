@@ -30,6 +30,7 @@ cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
+id_project=28146931
 
 def main(argv):
     with Cytomine.connect_from_cli(argv):

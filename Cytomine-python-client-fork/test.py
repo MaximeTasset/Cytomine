@@ -222,19 +222,23 @@ def test_depth():
 
   train_SampleX,train_SampleY = ext.X[indexes[int(train*len(indexes)):]],ext.Y[indexes[int(train*len(indexes)):]]
   test_SampleX,test_SampleY = ext.X[indexes[:int(test*len(indexes))]],ext.Y[indexes[:int(test*len(indexes))]]
-#  val_SampleX,val_SampleY = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]],ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+  val_SampleX,val_SampleY = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]],ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
   depth = 100
   scores = []
+  best = (0,0,0)
   for i in range(depth):
       etc.max_depth = i + 1
       etc.fit(train_SampleX,train_SampleY)
-      scores.append(etc.score(test_SampleX,test_SampleY))
+      score = etc.score(test_SampleX,test_SampleY)
+      scores.append(score)
+      if score >= best[1]:
+        best = (i+1,score,etc.score(val_SampleX,val_SampleY))
   plt.plot(range(1,depth+1),scores)
   plt.ylabel("Score")
   plt.xlabel("Max Depth")
   plt.savefig("score_max_depth.png")
   plt.close()
-
+  print("Best score with a max depth of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
   etc.max_depth = max_depth
 
 
@@ -250,22 +254,27 @@ def test_Spaciality():
     train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
     test_SampleX,test_SampleY = X[indexes[:int(test*len(indexes))]],y[indexes[:int(test*len(indexes))]]
     val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+    del X,y
 
     print("train set size: {}".format(len(train_SampleY)))
     print("test set size: {}".format(len(test_SampleY)))
     print("validation set size: {}".format(len(val_SampleY)))
 
     etc.fit(train_SampleX,train_SampleY)
+    del train_SampleX,train_SampleY
+
     score = etc.score(test_SampleX,test_SampleY)
+    del test_SampleX,test_SampleY
     print("Score with a slice size of {}:\t{}".format(i,score))
 
     if score >= best[1]:
         best = (i,score,etc.score(val_SampleX,val_SampleY))
+    del val_SampleX,val_SampleY
 
   print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
 
 if __name__ == '__main__':
   test_comparaisonFeatureImportance()
   counts = test_DimensionReduction()
-  test_Spaciality()
   test_depth()
+  test_Spaciality()
