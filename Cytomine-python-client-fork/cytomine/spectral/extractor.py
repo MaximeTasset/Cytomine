@@ -195,7 +195,7 @@ class Extractor:
                   writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
-    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = None,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
+    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = None,id_users=None,predict_terms_list=None,max_fetch_size=(10,10),pixel_border=0):
         """
         " read the annotations of a list of imagegroup from a project
         """
@@ -225,7 +225,7 @@ class Extractor:
                 raise ValueError("Not enough information to continue")
 
         nb_annotation = 0
-
+        pixel_border = min(0,pixel_border)
 
         polys = []
         spect = []
@@ -271,7 +271,7 @@ class Extractor:
                       annotations_list = self.pool.map(ann,id_users)
 
 
-                  annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height)
+                  annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
                   for id in dic:
                     nb_annotation_term[id] += dic[id]
                   nb_annotation += nb_ann
@@ -453,7 +453,7 @@ def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False):
         else:
           return x_coord
 
-def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
+def extract_roi(annotations_list,predict_terms_list,image_width,image_height,pixel_border):
     annot = []
     polys = []
     rois = []
@@ -477,14 +477,19 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height):
 
             minx, miny, maxx, maxy = pol.bounds
 
+            minx = max(minx - pixel_border,0)
+            miny = max(miny - pixel_border,0)
+            maxx = min(maxx + pixel_border,image_width - 1)
+            maxy = min(maxy + pixel_border,image_height - 1)
+
             sizew = int(abs(maxx - minx))
             sizeh = int(abs(maxy - miny))
 
             #conversion to API up-left (0,0) coordonate
-            w = max(min(int(round(minx)),image_width),0)
-            h = max(min(int(round(image_height - maxy)),image_height),0)
+            w = max(min(int(round(minx)),image_width - 1),0)
+            h = max(min(int(round(image_height - maxy)),image_height - 1),0)
 
-            rect.append((w,h,sizew,sizeh))
+            rect.append((round(w),round(h),sizew,sizeh))
             rois.append((round(maxx),round(maxy),sizew,sizeh,image_height))
     return annot,polys,rois,rect,dic,nb_annotation
 
