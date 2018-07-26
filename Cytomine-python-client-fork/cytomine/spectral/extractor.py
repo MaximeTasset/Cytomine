@@ -195,28 +195,34 @@ class Extractor:
                   writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
-    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = 28146931,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
+    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = None,id_users=None,predict_terms_list=None,max_fetch_size=(10,10)):
         """
         " read the annotations of a list of imagegroup from a project
         """
 
-        if predict_terms_list is None:
-          terms = TermCollection(filters={'project':id_project}).fetch()
-          predict_terms_list = {term.id for term in terms}
-          nb_annotation_term = {term.id:0 for term in terms}
-          map_id_name_terms = {term.id:term.name for term in terms}
+        if predict_terms_list is None and id_project is None:
+            terms = TermCollection(filters={'project':id_project}).fetch()
+            predict_terms_list = {term.id for term in terms}
+            nb_annotation_term = {term.id:0 for term in terms}
+            map_id_name_terms = {term.id:term.name for term in terms}
+        elif predict_terms_list is not None:
+            predict_terms_list = set(predict_terms_list)
+            map_id_name_terms = {}
+            nb_annotation_term = {term:0 for term in predict_terms_list}
+            for term in predict_terms_list:
+                try:
+                  map_id_name_terms[term] = Term(id=term).fetch().name
+                except AttributeError:
+                  pass
         else:
-          predict_terms_list = set(predict_terms_list)
-          map_id_name_terms = {}
-          nb_annotation_term = {term:0 for term in predict_terms_list}
-          for term in predict_terms_list:
-              try:
-                map_id_name_terms[term] = Term(id=term).fetch().name
-              except AttributeError:
-                pass
+            raise ValueError("Not enough information to continue")
+
         if imagegroup_id_list is None:
-          imagegroup_id_list = ImageGroupCollection({"project":id_project}).fetch()
-          imagegroup_id_list = [im.id for im in imagegroup_id_list]
+            if id_project is not None:
+                imagegroup_id_list = ImageGroupCollection({"project":id_project}).fetch()
+                imagegroup_id_list = [im.id for im in imagegroup_id_list]
+            else:
+                raise ValueError("Not enough information to continue")
 
         nb_annotation = 0
 
@@ -235,6 +241,7 @@ class Extractor:
                 continue
             else:
               imagegroupHDF5 = imagegroupHDF5.id
+              id_project = ImageGroup(id=imagegroup_id).fetch().project
 
             #allow to get only the images used in the HDF5 imageGroup
             images = ImageSequenceCollection(filters={"imagegroup":imagegroup_id}).fetch()
