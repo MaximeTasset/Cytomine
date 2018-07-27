@@ -200,7 +200,7 @@ class Extractor:
         " read the annotations of a list of imagegroup from a project
         """
 
-        if predict_terms_list is None and id_project is None:
+        if predict_terms_list is None and id_project is not None:
             terms = TermCollection(filters={'project':id_project}).fetch()
             predict_terms_list = {term.id for term in terms}
             nb_annotation_term = {term.id:0 for term in terms}

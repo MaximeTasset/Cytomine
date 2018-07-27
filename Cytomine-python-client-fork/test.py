@@ -30,6 +30,7 @@ from cytomine.spectral.extractor import Extractor
 import matplotlib.pyplot as plt
 plt.switch_backend("agg")
 import numpy as np
+import os
 #import sys
 #import pickle
 
@@ -38,13 +39,17 @@ cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project=0
 
-n_jobs = 3
+n_jobs = 24
 n_estimators = 100
 test = .2
 validation = .1
 train = test + validation
 
-ext = Extractor("extractedData.save")
+filename = "extractedData.save"
+save_path = "./colors"
+
+os.makedirs(save_path,exist_ok=True)
+ext = Extractor(filename)
 try:
     print("load data from file")
     ext.readFile()
@@ -56,7 +61,7 @@ except FileNotFoundError:
       ext.loadDataFromCytomine(id_project=id_project)
       print("Saving data to file for later uses")
       ext.writeFile()
-
+nb_feature = ext.numFeature
 print("fit_transform pca")
 pca = PCA().fit(ext.X)
 print("transform")
@@ -143,47 +148,47 @@ def test_comparaisonFeatureImportance():
 
     best = {}
 
-    for i in sorted(list(set(list(range(0,1600,100))+list(range(1600,1650,1))))):
-        print("\nScores with best {} features/components:\n".format(1650-i))
-        n_feature.append(1650-i)
+    for i in sorted(list(set(list(range(0,1600,100))+list(range(1600,nb_feature,1))))):
+        print("\nScores with best {} features/components:\n".format(nb_feature-i))
+        n_feature.append(nb_feature-i)
 
         print("Scores before PCA:")
-        etc.fit(train_SampleX[:,imp[:int(1650-i)]],train_SampleY)
-        score = etc.score(test_SampleX[:,imp[:int(1650-i)]],test_SampleY)
+        etc.fit(train_SampleX[:,imp[:int(nb_feature-i)]],train_SampleY)
+        score = etc.score(test_SampleX[:,imp[:int(nb_feature-i)]],test_SampleY)
         if best.get("imp",(0,0))[1] < score:
-          best["imp"] = (int(1650-i),score,imp)
+          best["imp"] = (int(nb_feature-i),score,imp)
         imp_score.append(score)
         print("\t -imp :\t{}".format(score))
-        etc.fit(train_SampleX[:,f_c[:int(1650-i)]],train_SampleY)
-        score = etc.score(test_SampleX[:,f_c[:int(1650-i)]],test_SampleY)
+        etc.fit(train_SampleX[:,f_c[:int(nb_feature-i)]],train_SampleY)
+        score = etc.score(test_SampleX[:,f_c[:int(nb_feature-i)]],test_SampleY)
         if best.get("f_c",(0,0))[1] < score:
-          best["f_c"] = (int(1650-i),score,f_c)
+          best["f_c"] = (int(nb_feature-i),score,f_c)
         f_c_score.append(score)
         print("\t -f_classif :\t{}".format(score))
-        etc.fit(train_SampleX[:,chi2[:int(1650-i)]],train_SampleY)
-        score = etc.score(test_SampleX[:,chi2[:int(1650-i)]],test_SampleY)
+        etc.fit(train_SampleX[:,chi2[:int(nb_feature-i)]],train_SampleY)
+        score = etc.score(test_SampleX[:,chi2[:int(nb_feature-i)]],test_SampleY)
         if best.get("chi2",(0,0))[1] < score:
-          best["chi2"] = (int(1650-i),score,chi2)
+          best["chi2"] = (int(nb_feature-i),score,chi2)
         chi2_score.append(score)
         print("\t -chi2 :\t{}".format(score))
-        etc.fit(train_SampleX[:,sumv[:int(1650-i)]],train_SampleY)
-        score = etc.score(test_SampleX[:,sumv[:int(1650-i)]],test_SampleY)
+        etc.fit(train_SampleX[:,sumv[:int(nb_feature-i)]],train_SampleY)
+        score = etc.score(test_SampleX[:,sumv[:int(nb_feature-i)]],test_SampleY)
         if best.get("sum",(0,0))[1] < score:
-          best["sum"] = (int(1650-i),score,sumv)
+          best["sum"] = (int(nb_feature-i),score,sumv)
         sum_score.append(score)
         print("\t -Sum :\t{}".format(score))
 
-        etc.fit(train_SamplePCA_X[:,:int(1650-i)],train_SampleY)
-        score = etc.score(test_SamplePCA_X[:,:int(1650-i)],test_SampleY)
+        etc.fit(train_SamplePCA_X[:,:int(nb_feature-i)],train_SampleY)
+        score = etc.score(test_SamplePCA_X[:,:int(nb_feature-i)],test_SampleY)
         if best.get("pca",(0,0))[1] < score:
-          best["pca"] = (int(1650-i),score,None)
+          best["pca"] = (int(nb_feature-i),score,None)
         pca_score.append(score)
         print("Score after PCA: {}".format(score))
 
-        etc.fit(train_SamplePCA_w_X[:,:int(1650-i)],train_SampleY)
-        score = etc.score(test_SamplePCA_w_X[:,:int(1650-i)],test_SampleY)
+        etc.fit(train_SamplePCA_w_X[:,:int(nb_feature-i)],train_SampleY)
+        score = etc.score(test_SamplePCA_w_X[:,:int(nb_feature-i)],test_SampleY)
         if best.get("pca_w",(0,0))[1] < score:
-          best["pca_w"] = (int(1650-i),score,None)
+          best["pca_w"] = (int(nb_feature-i),score,None)
         pca_w_score.append(score)
         print("Score after PCA with whiten: {}".format(score))
 
@@ -213,7 +218,7 @@ def test_comparaisonFeatureImportance():
     plt.ylabel("Score")
     plt.xlabel("Number Of Feature")
     plt.legend()
-    plt.savefig("comparaison_feature_imp_{}.png".format(n_estimators))
+    plt.savefig(os.path.join(save_path,"comparaison_feature_imp_{}.png").format(n_estimators))
     plt.close()
 
     return pca_score,pca_w_score, imp_score, f_c_score, chi2_score, sum_score, n_feature
@@ -236,7 +241,7 @@ def test_DimensionReduction():
   plt.plot(n_component,counts)
   plt.ylabel("Explained Variance Ratio")
   plt.xlabel("Number Of Principal Components")
-  plt.savefig("explained_variance_ratio_pca.png")
+  plt.savefig(os.path.join(save_path,"explained_variance_ratio_pca.png"))
   plt.close()
   return counts
 
@@ -296,13 +301,13 @@ def test_depth():
         if score >= best_pca_w[1]:
           best_pca_w = (i+1,score,etc.score(val_SamplePCA_w_X,val_SampleY))
 
-    plt.plot(range(1,depth+1),scores,"raw data")
-    plt.plot(range(1,depth+1),scores_pca,"PCA")
-    plt.plot(range(1,depth+1),scores_pca_w,"PCA whiten")
+    plt.plot(range(1,depth+1),scores,label="raw data")
+    plt.plot(range(1,depth+1),scores_pca,label="PCA")
+    plt.plot(range(1,depth+1),scores_pca_w,label="PCA whiten")
     plt.ylabel("Score")
     plt.xlabel("Max Depth")
     plt.legend()
-    plt.savefig("score_max_depth.png")
+    plt.savefig(os.path.join(save_path,"score_max_depth.png_{}".format(n_estimators)))
     plt.close()
     print("Raw: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best))
     print("PCA: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best_pca))
@@ -349,7 +354,8 @@ if __name__ == '__main__':
         print("ExtraTreesClassifier with {} estimators".format(n_estimators))
         etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
         test_comparaisonFeatureImportance()
-        counts = test_DimensionReduction()
+
         test_depth()
         test_Spaciality()
 
+    counts = test_DimensionReduction()
