@@ -46,12 +46,14 @@ validation = .1
 train = test + validation
 
 filename = "extractedData.save"
+#filename = "MaldiDemoData.save"
 save_path = "./colors"
+#save_path = "./MaldiDemo"
 
 os.makedirs(save_path,exist_ok=True)
 ext = Extractor(filename)
 try:
-    print("load data from file")
+    print("load data from file {}".format(filename))
     ext.readFile()
 except FileNotFoundError:
     print("File not found... Trying to fetch it from Cytomine")
@@ -148,7 +150,7 @@ def test_comparaisonFeatureImportance():
 
     best = {}
 
-    for i in sorted(list(set(list(range(0,1600,100))+list(range(1600,nb_feature,1))))):
+    for i in sorted(list(set(list(range(0,int(nb_feature-50),100))+list(range(int(nb_feature-50),nb_feature,1))))):
         print("\nScores with best {} features/components:\n".format(nb_feature-i))
         n_feature.append(nb_feature-i)
 
@@ -354,7 +356,6 @@ if __name__ == '__main__':
         print("ExtraTreesClassifier with {} estimators".format(n_estimators))
         etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
         test_comparaisonFeatureImportance()
-
         test_depth()
         test_Spaciality()
 
