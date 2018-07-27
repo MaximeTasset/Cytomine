@@ -309,7 +309,7 @@ def test_depth():
     plt.ylabel("Score")
     plt.xlabel("Max Depth")
     plt.legend()
-    plt.savefig(os.path.join(save_path,"score_max_depth.png_{}".format(n_estimators)))
+    plt.savefig(os.path.join(save_path,"score_max_depth_{}.png".format(n_estimators)))
     plt.close()
     print("Raw: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best))
     print("PCA: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best_pca))
@@ -330,6 +330,8 @@ def test_Spaciality():
         train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
         test_SampleX,test_SampleY = X[indexes[:int(test*len(indexes))]],y[indexes[:int(test*len(indexes))]]
         val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+        if not (len(train_SampleY) and len(test_SampleY) and len(val_SampleY)):
+            break
         del X,y
 
         print("train set size: {}".format(len(train_SampleY)))
