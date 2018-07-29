@@ -47,8 +47,10 @@ train = test + validation
 
 filename = "extractedData.save"
 #filename = "MaldiDemoData.save"
+#filename = "FlutisteData.save"
 save_path = "./colors"
 #save_path = "./MaldiDemo"
+#save_path = "./Flutiste"
 
 os.makedirs(save_path,exist_ok=True)
 ext = Extractor(filename)

@@ -347,7 +347,6 @@ class Extractor:
 
 #            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.uint8) for _ in range(len(annot[i].term))]
 
-
             spectrum = [pixel for pixel in spect[i]]
             spectrum.sort(key=lambda spectra: spectra['pxl'])
             image = np.array([spectra['spectra'] for spectra in spectrum])

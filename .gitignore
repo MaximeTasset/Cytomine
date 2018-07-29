@@ -10,3 +10,4 @@ Cytomine-python-client-fork/time_test.py
 *.xlsx
 *.save
 *.pickle
+*.zip
