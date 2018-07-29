@@ -122,14 +122,14 @@ class ImageGroupHDF5(Model):
         try:
           val = Cytomine.get_instance().get(uri)
           return val["collection"]
-        except TypeError:
+        except TypeError as e:
           from time import localtime, strftime,sleep
           import socket
           print("TIME : %s" %strftime("%Y-%m-%d %H:%M:%S", localtime()))
           print(uri)
           sleep(10)
           #something wrong append
-          raise socket.error
+          raise socket.error(*e.args)
 
 
 # class ImageGroupHDF5Collection(Collection):

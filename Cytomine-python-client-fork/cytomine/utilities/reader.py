@@ -467,27 +467,46 @@ class CytomineSpectralReader(Reader):
                         break
                 if not num_spectra:
                     return
+#                if not in_list:
+#                    image = np.zeros((result["tile"][2],result["tile"][3],num_spectra),dtype=np.uint8)
+#                    if all_coord:
+#                        image_coord = np.zeros((result["tile"][2],result["tile"][3],2))
+#                    else:
+#                        image_coord = np.asarray(result["tile"])
+#                else:
+#                    image = []
+#                    image_coord = []
+                spectrum = [spectra for collection in list_collections for spectra in collection]
+
+#                for collection in list_collections:
+#                    for spectra in collection:
+
+#                        if not in_list:
+#                            position = (abs(result["tile"][0] - spectra['pxl'][0]),abs(result["tile"][1] - spectra['pxl'][1]))
+#                            image[position] = spectra['spectra']
+#                            if all_coord:
+#                                image_coord[position] = spectra['pxl']
+#                        else:
+#                            image_coord.append(spectra['pxl'])
+#                            image.append(spectra['spectra'])
+#                        spectrum.append(spectra)
+                del list_collections
+                spectrum.sort(key=lambda spectra: spectra['pxl'])
+
+                image = [spectra['spectra'] for spectra in spectrum]
+                if in_list or all_coord:
+                    image_coord = [spectra['pxl'] for spectra in spectrum]
+
                 if not in_list:
-                    image = np.zeros((result["tile"][2],result["tile"][3],num_spectra),dtype=np.uint8)
+                    image = np.array(image)
+                    image = np.expand_dims(image,axis=1)
+                    image = image.reshape((result["tile"][2],result["tile"][3], num_spectra))
                     if all_coord:
-                        image_coord = np.zeros((result["tile"][2],result["tile"][3],2))
+                        image_coord = np.array(image_coord)
+                        image_coord = np.expand_dims(image_coord,axis=1)
+                        image_coord = image_coord.reshape((result["tile"][2],result["tile"][3], 2))
                     else:
                         image_coord = np.asarray(result["tile"])
-                else:
-                    image = []
-                    image_coord = []
-
-                for collection in list_collections:
-                    for spectra in collection:
-
-                        if not in_list:
-                            position = (abs(result["tile"][0] - spectra['pxl'][0]),abs(result["tile"][1] - spectra['pxl'][1]))
-                            image[position] = spectra['spectra']
-                            if all_coord:
-                                image_coord[position] = spectra['pxl']
-                        else:
-                            image_coord.append(spectra['pxl'])
-                            image.append(spectra['spectra'])
 
                 return image,image_coord
 

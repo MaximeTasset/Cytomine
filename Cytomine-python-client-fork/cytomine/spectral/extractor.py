@@ -272,6 +272,7 @@ class Extractor:
 
 
                   annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
+
                   for id in dic:
                     nb_annotation_term[id] += dic[id]
                   nb_annotation += nb_ann
@@ -344,34 +345,72 @@ class Extractor:
 
         for i in range(len(spect)):
 
-            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.uint8) for _ in range(len(annot[i].term))]
+#            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.uint8) for _ in range(len(annot[i].term))]
+
+
+            spectrum = [pixel for pixel in spect[i]]
+            spectrum.sort(key=lambda spectra: spectra['pxl'])
+            image = np.array([spectra['spectra'] for spectra in spectrum])
+            image_coord = np.array([spectra['pxl'] for spectra in spectrum])
+            del spectrum
+
+            image = np.expand_dims(image,axis=1)
+            image = image.reshape((rois[i][2],rois[i][3], nimage))
+            roi = [image.copy() for _ in range(len(annot[i].term))]
+            del image
             roil = [np.zeros((rois[i][2],rois[i][3]),dtype=int) for _ in range(len(annot[i].term))]
-            for pixel in spect[i]:
-                #conversion to Cytomine down-left (0,0) coordonate
-                lp = [pixel['pxl'][0],rois[i][4]-pixel['pxl'][1]]
-                for t in range(len(annot[i].term)):
-                    roi[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = pixel['spectra']
+
+            image_coord = np.expand_dims(image_coord,axis=1)
+            image_coord = image_coord.reshape((rois[i][2],rois[i][3], 2))
+
+            for position in np.ndindex(image_coord.shape[:2]):
+                lp = [image_coord[position][0],rois[i][4]-image_coord[position][1]]
                 p = Point(lp)
                 if polys[i].contains(p):
                     if len(annot[i].term):
                         for t in range(len(annot[i].term)):
-                            roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[i].term[0]
-
+                            roil[t][position] = annot[i].term[0]
                     for term in annot[i].term:
-                      dataCoord.append(lp)
-                      dataX.append(pixel['spectra'])
-                      dataY.append(term)
+                        dataCoord.append(lp)
+                        dataX.append(roi[0][position])
+                        dataY.append(term)
                 else:
                     unknown = True
                     for a,pol in enumerate(polys):
                         if pol.contains(p):
                             for t in range(len(annot[i].term)):
-                                roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[a].term[0]
+                                roil[t][position] = annot[a].term[0]
                             unknown = False
                             break
                     if unknown:
                         unknownCoord.append(lp)
-                        unknownX.append(pixel['spectra'])
+                        unknownX.append(roi[0][position])
+#            for pixel in spect[i]:
+#                #conversion to Cytomine down-left (0,0) coordonate
+#                lp = [pixel['pxl'][0],rois[i][4]-pixel['pxl'][1]]
+#                for t in range(len(annot[i].term)):
+#                    roi[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = pixel['spectra']
+#                p = Point(lp)
+#                if polys[i].contains(p):
+#                    if len(annot[i].term):
+#                        for t in range(len(annot[i].term)):
+#                            roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[i].term[0]
+#
+#                    for term in annot[i].term:
+#                      dataCoord.append(lp)
+#                      dataX.append(pixel['spectra'])
+#                      dataY.append(term)
+#                else:
+#                    unknown = True
+#                    for a,pol in enumerate(polys):
+#                        if pol.contains(p):
+#                            for t in range(len(annot[i].term)):
+#                                roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[a].term[0]
+#                            unknown = False
+#                            break
+#                    if unknown:
+#                        unknownCoord.append(lp)
+#                        unknownX.append(pixel['spectra'])
             self.rois.extend([(roi[t],roil[t]) for t in range(len(annot[i].term))])
 
 
