@@ -14,6 +14,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 from cytomine.utilities.reader import CytomineSpectralReader,Bounds
 
 import pickle
+import gzip
+import numpy as np
 
 filename = "FlutisteData_n_u.save"
 n_jobs = 24
