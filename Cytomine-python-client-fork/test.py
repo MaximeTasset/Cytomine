@@ -81,8 +81,12 @@ shuffle(indexes)
 
 etc = None
 
+best_FI = {}
+best_sp = {}
+best_dp = {}
 
 def test_comparaisonFeatureImportance():
+    global best_FI
     print("================================================")
     print("Test: Comparaison Of Feature Importance Measure")
     print("================================================")
@@ -150,7 +154,7 @@ def test_comparaisonFeatureImportance():
     sum_score = []
     n_feature = []
 
-    best = {}
+    best_FI = {}
 
     for i in sorted(list(set(list(range(0,int(nb_feature-50),100))+list(range(int(nb_feature-50),nb_feature,1))))):
         print("\nScores with best {} features/components:\n".format(nb_feature-i))
@@ -159,46 +163,46 @@ def test_comparaisonFeatureImportance():
         print("Scores before PCA:")
         etc.fit(train_SampleX[:,imp[:int(nb_feature-i)]],train_SampleY)
         score = etc.score(test_SampleX[:,imp[:int(nb_feature-i)]],test_SampleY)
-        if best.get("imp",(0,0))[1] < score:
-          best["imp"] = (int(nb_feature-i),score,imp)
+        if best_FI.get("imp",(0,0))[1] < score:
+          best_FI["imp"] = (int(nb_feature-i),score,imp)
         imp_score.append(score)
         print("\t -imp :\t{}".format(score))
         etc.fit(train_SampleX[:,f_c[:int(nb_feature-i)]],train_SampleY)
         score = etc.score(test_SampleX[:,f_c[:int(nb_feature-i)]],test_SampleY)
-        if best.get("f_c",(0,0))[1] < score:
-          best["f_c"] = (int(nb_feature-i),score,f_c)
+        if best_FI.get("f_c",(0,0))[1] < score:
+          best_FI["f_c"] = (int(nb_feature-i),score,f_c)
         f_c_score.append(score)
         print("\t -f_classif :\t{}".format(score))
         etc.fit(train_SampleX[:,chi2[:int(nb_feature-i)]],train_SampleY)
         score = etc.score(test_SampleX[:,chi2[:int(nb_feature-i)]],test_SampleY)
-        if best.get("chi2",(0,0))[1] < score:
-          best["chi2"] = (int(nb_feature-i),score,chi2)
+        if best_FI.get("chi2",(0,0))[1] < score:
+          best_FI["chi2"] = (int(nb_feature-i),score,chi2)
         chi2_score.append(score)
         print("\t -chi2 :\t{}".format(score))
         etc.fit(train_SampleX[:,sumv[:int(nb_feature-i)]],train_SampleY)
         score = etc.score(test_SampleX[:,sumv[:int(nb_feature-i)]],test_SampleY)
-        if best.get("sum",(0,0))[1] < score:
-          best["sum"] = (int(nb_feature-i),score,sumv)
+        if best_FI.get("sum",(0,0))[1] < score:
+          best_FI["sum"] = (int(nb_feature-i),score,sumv)
         sum_score.append(score)
         print("\t -Sum :\t{}".format(score))
 
         etc.fit(train_SamplePCA_X[:,:int(nb_feature-i)],train_SampleY)
         score = etc.score(test_SamplePCA_X[:,:int(nb_feature-i)],test_SampleY)
-        if best.get("pca",(0,0))[1] < score:
-          best["pca"] = (int(nb_feature-i),score,None)
+        if best_FI.get("pca",(0,0))[1] < score:
+          best_FI["pca"] = (int(nb_feature-i),score,None)
         pca_score.append(score)
         print("Score after PCA: {}".format(score))
 
         etc.fit(train_SamplePCA_w_X[:,:int(nb_feature-i)],train_SampleY)
         score = etc.score(test_SamplePCA_w_X[:,:int(nb_feature-i)],test_SampleY)
-        if best.get("pca_w",(0,0))[1] < score:
-          best["pca_w"] = (int(nb_feature-i),score,None)
+        if best_FI.get("pca_w",(0,0))[1] < score:
+          best_FI["pca_w"] = (int(nb_feature-i),score,None)
         pca_w_score.append(score)
         print("Score after PCA with whiten: {}".format(score))
 
     print("Bests tested on validation set:")
-    for f in best:
-        n_feature_k,score_test,f_imp = best[f]
+    for f in best_FI:
+        n_feature_k,score_test,f_imp = best_FI[f]
         if f == "pca":
             etc.fit(train_SamplePCA_X[:,:int(n_feature_k)],train_SampleY)
             score = etc.score(val_SamplePCA_X[:,:int(n_feature_k)],val_SampleY)
@@ -250,6 +254,7 @@ def test_DimensionReduction():
   return counts
 
 def test_depth():
+    global best_dp
     print("================================================")
     print("Test: Depth Importance (etc max_depth)")
     print("================================================")
@@ -316,6 +321,8 @@ def test_depth():
     print("Raw: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best))
     print("PCA: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best_pca))
     print("PCA with whiten: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best_pca_w))
+
+    best_dp = {"raw":best,"pca":best_pca,"pca_w":best_pca_w}
 
     etc.max_depth = max_depth
 

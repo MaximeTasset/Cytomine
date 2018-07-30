@@ -1,0 +1,1475 @@
+load data from file FlutisteData.save
+fit_transform pca
+transform
+fit_transform pca with whiten
+transform
+ExtraTreesClassifier with 100 estimators
+================================================
+Test: Comparaison Of Feature Importance Measure
+================================================
+getting feature importances from ETC
+getting feature importances from f_classif
+getting feature importances from chi2
+getting sum of ETC, chi2 and f_classif
+train set size: 14319
+test set size: 4091
+validation set size: 2045
+
+Scores with best 1650 features/components:
+
+Scores before PCA:
+	 -imp :	0.9440234661451967
+	 -f_classif :	0.943534588120264
+	 -chi2 :	0.9428012710828648
+	 -Sum :	0.9408457589831337
+Score after PCA: 0.7939379124908336
+Score after PCA with whiten: 0.7993155707650941
+
+Scores with best 1550 features/components:
+
+Scores before PCA:
+	 -imp :	0.943534588120264
+	 -f_classif :	0.9462234172573942
+	 -chi2 :	0.9454901002199951
+	 -Sum :	0.9408457589831337
+Score after PCA: 0.7949156685406991
+Score after PCA with whiten: 0.7995600097775605
+
+Scores with best 1450 features/components:
+
+Scores before PCA:
+	 -imp :	0.9420679540454656
+	 -f_classif :	0.9428012710828648
+	 -chi2 :	0.9415790760205329
+	 -Sum :	0.9406013199706673
+Score after PCA: 0.8015155218772916
+Score after PCA with whiten: 0.8022488389146908
+
+Scores with best 1350 features/components:
+
+Scores before PCA:
+	 -imp :	0.943534588120264
+	 -f_classif :	0.9450012221950623
+	 -chi2 :	0.9437790271327304
+	 -Sum :	0.9418235150329992
+Score after PCA: 0.8042043510144219
+Score after PCA with whiten: 0.8076264971889514
+
+Scores with best 1250 features/components:
+
+Scores before PCA:
+	 -imp :	0.9440234661451967
+	 -f_classif :	0.9428012710828648
+	 -chi2 :	0.9437790271327304
+	 -Sum :	0.9381569298460034
+Score after PCA: 0.8044487900268883
+Score after PCA with whiten: 0.8088486922512833
+
+Scores with best 1150 features/components:
+
+Scores before PCA:
+	 -imp :	0.9472011733072598
+	 -f_classif :	0.943534588120264
+	 -chi2 :	0.9420679540454656
+	 -Sum :	0.9401124419457345
+Score after PCA: 0.8071376191640186
+Score after PCA with whiten: 0.8076264971889514
+
+Scores with best 1050 features/components:
+
+Scores before PCA:
+	 -imp :	0.9440234661451967
+	 -f_classif :	0.942312393057932
+	 -chi2 :	0.9413346370080665
+	 -Sum :	0.9396235639208017
+Score after PCA: 0.8139819115130775
+Score after PCA with whiten: 0.8137374725006111
+
+Scores with best 950 features/components:
+
+Scores before PCA:
+	 -imp :	0.9425568320703984
+	 -f_classif :	0.9398680029332681
+	 -chi2 :	0.9418235150329992
+	 -Sum :	0.9374236128086042
+Score after PCA: 0.8156929846003422
+Score after PCA with whiten: 0.8134930334881447
+
+Scores with best 850 features/components:
+
+Scores before PCA:
+	 -imp :	0.9430457100953312
+	 -f_classif :	0.9359569787338059
+	 -chi2 :	0.9344903446590076
+	 -Sum :	0.9376680518210706
+Score after PCA: 0.8142263505255439
+Score after PCA with whiten: 0.8176484967000733
+
+Scores with best 750 features/components:
+
+Scores before PCA:
+	 -imp :	0.9454901002199951
+	 -f_classif :	0.937912490833537
+	 -chi2 :	0.9327792715717429
+	 -Sum :	0.9342459056465412
+Score after PCA: 0.8240039110241995
+Score after PCA with whiten: 0.8271816181862626
+
+Scores with best 650 features/components:
+
+Scores before PCA:
+	 -imp :	0.9420679540454656
+	 -f_classif :	0.9305793204595454
+	 -chi2 :	0.9308237594720117
+	 -Sum :	0.9354681007088731
+Score after PCA: 0.8269371791737962
+Score after PCA with whiten: 0.8301148863358592
+
+Scores with best 550 features/components:
+
+Scores before PCA:
+	 -imp :	0.9452456612075287
+	 -f_classif :	0.9322903935468101
+	 -chi2 :	0.9305793204595454
+	 -Sum :	0.9364458567587387
+Score after PCA: 0.8352481055976534
+Score after PCA with whiten: 0.840625763871914
+
+Scores with best 450 features/components:
+
+Scores before PCA:
+	 -imp :	0.9476900513321926
+	 -f_classif :	0.9274016132974823
+	 -chi2 :	0.924712784160352
+	 -Sum :	0.9325348325592765
+Score after PCA: 0.8462478611586409
+Score after PCA with whiten: 0.8472256172085065
+
+Scores with best 350 features/components:
+
+Scores before PCA:
+	 -imp :	0.9413346370080665
+	 -f_classif :	0.9227572720606209
+	 -chi2 :	0.9200684429234905
+	 -Sum :	0.930334881447079
+Score after PCA: 0.8560254216572966
+Score after PCA with whiten: 0.8582253727694941
+
+Scores with best 250 features/components:
+
+Scores before PCA:
+	 -imp :	0.9410901979956001
+	 -f_classif :	0.9132241505744316
+	 -chi2 :	0.9098020043999022
+	 -Sum :	0.9293571253972134
+Score after PCA: 0.8653141041310193
+Score after PCA with whiten: 0.8621363969689563
+
+Scores with best 150 features/components:
+
+Scores before PCA:
+	 -imp :	0.9410901979956001
+	 -f_classif :	0.8951356636519189
+	 -chi2 :	0.8983133708139819
+	 -Sum :	0.9252016621852848
+Score after PCA: 0.8794915668540699
+Score after PCA with whiten: 0.8799804448790027
+
+Scores with best 50 features/components:
+
+Scores before PCA:
+	 -imp :	0.9036910290882425
+	 -f_classif :	0.8782693717917379
+	 -chi2 :	0.8812026399413346
+	 -Sum :	0.9049132241505744
+Score after PCA: 0.8973356147641164
+Score after PCA with whiten: 0.8909802004399903
+
+Scores with best 49 features/components:
+
+Scores before PCA:
+	 -imp :	0.9100464434123686
+	 -f_classif :	0.881447078953801
+	 -chi2 :	0.8768027377169396
+	 -Sum :	0.9010021999511122
+Score after PCA: 0.8946467856269861
+Score after PCA with whiten: 0.8934245905646541
+
+Scores with best 48 features/components:
+
+Scores before PCA:
+	 -imp :	0.9051576631630408
+	 -f_classif :	0.8816915179662674
+	 -chi2 :	0.8768027377169396
+	 -Sum :	0.8963578587142508
+Score after PCA: 0.8900024443901247
+Score after PCA with whiten: 0.891469078464923
+
+Scores with best 47 features/components:
+
+Scores before PCA:
+	 -imp :	0.9039354681007089
+	 -f_classif :	0.8804693229039354
+	 -chi2 :	0.8731361525299438
+	 -Sum :	0.8983133708139819
+Score after PCA: 0.8909802004399903
+Score after PCA with whiten: 0.8924468345147886
+
+Scores with best 46 features/components:
+
+Scores before PCA:
+	 -imp :	0.9032021510633097
+	 -f_classif :	0.8826692740161329
+	 -chi2 :	0.8792471278416035
+	 -Sum :	0.895868980689318
+Score after PCA: 0.8948912246394525
+Score after PCA with whiten: 0.8934245905646541
+
+Scores with best 45 features/components:
+
+Scores before PCA:
+	 -imp :	0.904668785138108
+	 -f_classif :	0.8807137619164018
+	 -chi2 :	0.8807137619164018
+	 -Sum :	0.8939134685895869
+Score after PCA: 0.8973356147641164
+Score after PCA with whiten: 0.8922023955023222
+
+Scores with best 44 features/components:
+
+Scores before PCA:
+	 -imp :	0.9041799071131753
+	 -f_classif :	0.8777804937668052
+	 -chi2 :	0.8772916157418724
+	 -Sum :	0.8966022977267172
+Score after PCA: 0.8975800537765828
+Score after PCA with whiten: 0.8941579076020533
+
+Scores with best 43 features/components:
+
+Scores before PCA:
+	 -imp :	0.9012466389635786
+	 -f_classif :	0.8780249327792715
+	 -chi2 :	0.8721583964800782
+	 -Sum :	0.8924468345147886
+Score after PCA: 0.8956245416768516
+Score after PCA with whiten: 0.892691273527255
+
+Scores with best 42 features/components:
+
+Scores before PCA:
+	 -imp :	0.901491077976045
+	 -f_classif :	0.8797360058665363
+	 -chi2 :	0.8760694206795404
+	 -Sum :	0.8956245416768516
+Score after PCA: 0.8951356636519189
+Score after PCA with whiten: 0.8968467367391836
+
+Scores with best 41 features/components:
+
+Scores before PCA:
+	 -imp :	0.8922023955023222
+	 -f_classif :	0.8775360547543388
+	 -chi2 :	0.8694695673429479
+	 -Sum :	0.8902468834025911
+Score after PCA: 0.895868980689318
+Score after PCA with whiten: 0.8948912246394525
+
+Scores with best 40 features/components:
+
+Scores before PCA:
+	 -imp :	0.8907357614275239
+	 -f_classif :	0.877047176729406
+	 -chi2 :	0.8677584942556832
+	 -Sum :	0.8885358103153264
+Score after PCA: 0.8956245416768516
+Score after PCA with whiten: 0.8951356636519189
+
+Scores with best 39 features/components:
+
+Scores before PCA:
+	 -imp :	0.884624786115864
+	 -f_classif :	0.8792471278416035
+	 -chi2 :	0.8699584453678807
+	 -Sum :	0.8897580053776583
+Score after PCA: 0.8985578098264483
+Score after PCA with whiten: 0.8973356147641164
+
+Scores with best 38 features/components:
+
+Scores before PCA:
+	 -imp :	0.8875580542654607
+	 -f_classif :	0.8765582987044732
+	 -chi2 :	0.8697140063554143
+	 -Sum :	0.8856025421657296
+Score after PCA: 0.8978244927890491
+Score after PCA with whiten: 0.8997800048887803
+
+Scores with best 37 features/components:
+
+Scores before PCA:
+	 -imp :	0.8824248350036665
+	 -f_classif :	0.8750916646296749
+	 -chi2 :	0.8704473233928135
+	 -Sum :	0.8851136641407968
+Score after PCA: 0.8975800537765828
+Score after PCA with whiten: 0.8975800537765828
+
+Scores with best 36 features/components:
+
+Scores before PCA:
+	 -imp :	0.8816915179662674
+	 -f_classif :	0.8787582498166707
+	 -chi2 :	0.8670251772182841
+	 -Sum :	0.880224883891469
+Score after PCA: 0.8980689318015155
+Score after PCA with whiten: 0.9010021999511122
+
+Scores with best 35 features/components:
+
+Scores before PCA:
+	 -imp :	0.8807137619164018
+	 -f_classif :	0.8750916646296749
+	 -chi2 :	0.8689806893180152
+	 -Sum :	0.8821803959912002
+Score after PCA: 0.8963578587142508
+Score after PCA with whiten: 0.8997800048887803
+
+Scores with best 34 features/components:
+
+Scores before PCA:
+	 -imp :	0.881447078953801
+	 -f_classif :	0.8748472256172085
+	 -chi2 :	0.8692251283304816
+	 -Sum :	0.880224883891469
+Score after PCA: 0.9010021999511122
+Score after PCA with whiten: 0.9000244439012466
+
+Scores with best 33 features/components:
+
+Scores before PCA:
+	 -imp :	0.8821803959912002
+	 -f_classif :	0.8724028354925446
+	 -chi2 :	0.868247372280616
+	 -Sum :	0.8829137130285993
+Score after PCA: 0.9007577609386458
+Score after PCA with whiten: 0.8995355658763139
+
+Scores with best 32 features/components:
+
+Scores before PCA:
+	 -imp :	0.8821803959912002
+	 -f_classif :	0.872647274505011
+	 -chi2 :	0.8706917624052799
+	 -Sum :	0.8794915668540699
+Score after PCA: 0.9000244439012466
+Score after PCA with whiten: 0.900268882913713
+
+Scores with best 31 features/components:
+
+Scores before PCA:
+	 -imp :	0.8812026399413346
+	 -f_classif :	0.8721583964800782
+	 -chi2 :	0.8684918112930824
+	 -Sum :	0.8819359569787338
+Score after PCA: 0.9000244439012466
+Score after PCA with whiten: 0.8978244927890491
+
+Scores with best 30 features/components:
+
+Scores before PCA:
+	 -imp :	0.8816915179662674
+	 -f_classif :	0.8746027866047421
+	 -chi2 :	0.8680029332681496
+	 -Sum :	0.8736250305548766
+Score after PCA: 0.901491077976045
+Score after PCA with whiten: 0.8985578098264483
+
+Scores with best 29 features/components:
+
+Scores before PCA:
+	 -imp :	0.8790026888291371
+	 -f_classif :	0.8753361036421413
+	 -chi2 :	0.8680029332681496
+	 -Sum :	0.8704473233928135
+Score after PCA: 0.9032021510633097
+Score after PCA with whiten: 0.8983133708139819
+
+Scores with best 28 features/components:
+
+Scores before PCA:
+	 -imp :	0.8804693229039354
+	 -f_classif :	0.8709362014177463
+	 -chi2 :	0.8645807870936202
+	 -Sum :	0.8709362014177463
+Score after PCA: 0.901491077976045
+Score after PCA with whiten: 0.9005133219261794
+
+Scores with best 27 features/components:
+
+Scores before PCA:
+	 -imp :	0.8777804937668052
+	 -f_classif :	0.8672696162307504
+	 -chi2 :	0.8636030310437546
+	 -Sum :	0.8721583964800782
+Score after PCA: 0.9029577120508433
+Score after PCA with whiten: 0.9019799560009778
+
+Scores with best 26 features/components:
+
+Scores before PCA:
+	 -imp :	0.8790026888291371
+	 -f_classif :	0.8724028354925446
+	 -chi2 :	0.8545587875824981
+	 -Sum :	0.8714250794426791
+Score after PCA: 0.9027132730383769
+Score after PCA with whiten: 0.9022243950134441
+
+Scores with best 25 features/components:
+
+Scores before PCA:
+	 -imp :	0.880224883891469
+	 -f_classif :	0.8692251283304816
+	 -chi2 :	0.8506477633830359
+	 -Sum :	0.8645807870936202
+Score after PCA: 0.9076020532877047
+Score after PCA with whiten: 0.9036910290882425
+
+Scores with best 24 features/components:
+
+Scores before PCA:
+	 -imp :	0.8748472256172085
+	 -f_classif :	0.8643363480811538
+	 -chi2 :	0.848203373258372
+	 -Sum :	0.8636030310437546
+Score after PCA: 0.9000244439012466
+Score after PCA with whiten: 0.9005133219261794
+
+Scores with best 23 features/components:
+
+Scores before PCA:
+	 -imp :	0.8719139574676118
+	 -f_classif :	0.8670251772182841
+	 -chi2 :	0.848203373258372
+	 -Sum :	0.855047665607431
+Score after PCA: 0.8988022488389147
+Score after PCA with whiten: 0.9007577609386458
+
+Scores with best 22 features/components:
+
+Scores before PCA:
+	 -imp :	0.8714250794426791
+	 -f_classif :	0.8601808848692252
+	 -chi2 :	0.8477144952334392
+	 -Sum :	0.8501588853581031
+Score after PCA: 0.9039354681007089
+Score after PCA with whiten: 0.9036910290882425
+
+Scores with best 21 features/components:
+
+Scores before PCA:
+	 -imp :	0.8775360547543388
+	 -f_classif :	0.8555365436323638
+	 -chi2 :	0.848203373258372
+	 -Sum :	0.8464923001711073
+Score after PCA: 0.9034465900757761
+Score after PCA with whiten: 0.9029577120508433
+
+Scores with best 20 features/components:
+
+Scores before PCA:
+	 -imp :	0.8709362014177463
+	 -f_classif :	0.8589586898068932
+	 -chi2 :	0.8428257149841115
+	 -Sum :	0.8455145441212417
+Score after PCA: 0.904668785138108
+Score after PCA with whiten: 0.8983133708139819
+
+Scores with best 19 features/components:
+
+Scores before PCA:
+	 -imp :	0.872647274505011
+	 -f_classif :	0.8562698606697629
+	 -chi2 :	0.8416035199217795
+	 -Sum :	0.8425812759716451
+Score after PCA: 0.9056465411879736
+Score after PCA with whiten: 0.9029577120508433
+
+Scores with best 18 features/components:
+
+Scores before PCA:
+	 -imp :	0.8706917624052799
+	 -f_classif :	0.8521143974578342
+	 -chi2 :	0.8418479589342459
+	 -Sum :	0.8386702517721828
+Score after PCA: 0.9012466389635786
+Score after PCA with whiten: 0.9005133219261794
+
+Scores with best 17 features/components:
+
+Scores before PCA:
+	 -imp :	0.8704473233928135
+	 -f_classif :	0.8460034221461745
+	 -chi2 :	0.8352481055976534
+	 -Sum :	0.8171596186751405
+Score after PCA: 0.9049132241505744
+Score after PCA with whiten: 0.9029577120508433
+
+Scores with best 16 features/components:
+
+Scores before PCA:
+	 -imp :	0.8709362014177463
+	 -f_classif :	0.8464923001711073
+	 -chi2 :	0.8364703006599853
+	 -Sum :	0.8127597164507455
+Score after PCA: 0.9039354681007089
+Score after PCA with whiten: 0.9041799071131753
+
+Scores with best 15 features/components:
+
+Scores before PCA:
+	 -imp :	0.8697140063554143
+	 -f_classif :	0.8445367880713762
+	 -chi2 :	0.8303593253483256
+	 -Sum :	0.7998044487900269
+Score after PCA: 0.901491077976045
+Score after PCA with whiten: 0.9032021510633097
+
+Scores with best 14 features/components:
+
+Scores before PCA:
+	 -imp :	0.8665362991933513
+	 -f_classif :	0.8401368858469812
+	 -chi2 :	0.8320703984355903
+	 -Sum :	0.7956489855780983
+Score after PCA: 0.9029577120508433
+Score after PCA with whiten: 0.9034465900757761
+
+Scores with best 13 features/components:
+
+Scores before PCA:
+	 -imp :	0.8699584453678807
+	 -f_classif :	0.835003666585187
+	 -chi2 :	0.8269371791737962
+	 -Sum :	0.7936934734783672
+Score after PCA: 0.8995355658763139
+Score after PCA with whiten: 0.9041799071131753
+
+Scores with best 12 features/components:
+
+Scores before PCA:
+	 -imp :	0.8464923001711073
+	 -f_classif :	0.8315815204106576
+	 -chi2 :	0.8188706917624052
+	 -Sum :	0.7883158152041065
+Score after PCA: 0.9049132241505744
+Score after PCA with whiten: 0.9012466389635786
+
+Scores with best 11 features/components:
+
+Scores before PCA:
+	 -imp :	0.8413590809093131
+	 -f_classif :	0.8276704962111953
+	 -chi2 :	0.8200928868247372
+	 -Sum :	0.7650941090197996
+Score after PCA: 0.9041799071131753
+Score after PCA with whiten: 0.9036910290882425
+
+Scores with best 10 features/components:
+
+Scores before PCA:
+	 -imp :	0.8301148863358592
+	 -f_classif :	0.823026154974334
+	 -chi2 :	0.8144707895380102
+	 -Sum :	0.7347836714739673
+Score after PCA: 0.8968467367391836
+Score after PCA with whiten: 0.8978244927890491
+
+Scores with best 9 features/components:
+
+Scores before PCA:
+	 -imp :	0.8222928379369348
+	 -f_classif :	0.8215595208995355
+	 -chi2 :	0.7993155707650941
+	 -Sum :	0.7247616719628452
+Score after PCA: 0.8946467856269861
+Score after PCA with whiten: 0.895868980689318
+
+Scores with best 8 features/components:
+
+Scores before PCA:
+	 -imp :	0.8213150818870691
+	 -f_classif :	0.8090931312637497
+	 -chi2 :	0.8022488389146908
+	 -Sum :	0.7262283060376437
+Score after PCA: 0.8912246394524566
+Score after PCA with whiten: 0.88829137130286
+
+Scores with best 7 features/components:
+
+Scores before PCA:
+	 -imp :	0.8142263505255439
+	 -f_classif :	0.7980933757027622
+	 -chi2 :	0.8007822048398925
+	 -Sum :	0.7286726961623075
+Score after PCA: 0.8931801515521878
+Score after PCA with whiten: 0.8912246394524566
+
+Scores with best 6 features/components:
+
+Scores before PCA:
+	 -imp :	0.8042043510144219
+	 -f_classif :	0.7900268882913714
+	 -chi2 :	0.7780493766805182
+	 -Sum :	0.725250549987778
+Score after PCA: 0.8819359569787338
+Score after PCA with whiten: 0.8856025421657296
+
+Scores with best 5 features/components:
+
+Scores before PCA:
+	 -imp :	0.7892935712539721
+	 -f_classif :	0.781715961867514
+	 -chi2 :	0.7633830359325349
+	 -Sum :	0.7179173796137863
+Score after PCA: 0.8724028354925446
+Score after PCA with whiten: 0.8785138108042043
+
+Scores with best 4 features/components:
+
+Scores before PCA:
+	 -imp :	0.7797604497677829
+	 -f_classif :	0.7726717184062576
+	 -chi2 :	0.7594720117330725
+	 -Sum :	0.712050843314593
+Score after PCA: 0.8572476167196285
+Score after PCA with whiten: 0.8609142019066243
+
+Scores with best 3 features/components:
+
+Scores before PCA:
+	 -imp :	0.7716939623563921
+	 -f_classif :	0.7482278171596187
+	 -chi2 :	0.7499388902468834
+	 -Sum :	0.7110730872647274
+Score after PCA: 0.8176484967000733
+Score after PCA with whiten: 0.8171596186751405
+
+Scores with best 2 features/components:
+
+Scores before PCA:
+	 -imp :	0.760938645807871
+	 -f_classif :	0.7589831337081399
+	 -chi2 :	0.748472256172085
+	 -Sum :	0.7118064043021266
+Score after PCA: 0.7538499144463456
+Score after PCA with whiten: 0.75287215839648
+
+Scores with best 1 features/components:
+
+Scores before PCA:
+	 -imp :	0.7570276216084088
+	 -f_classif :	0.756538743583476
+	 -chi2 :	0.756538743583476
+	 -Sum :	0.7125397213395258
+Score after PCA: 0.6653629919335126
+Score after PCA with whiten: 0.6653629919335126
+Bests tested on validation set:
+Score imp (with 450 features):	0.9344743276283619 (test:	0.9476900513321926)
+Score f_c (with 1550 features):	0.9334963325183374 (test:	0.9462234172573942)
+Score chi2 (with 1550 features):	0.9310513447432763 (test:	0.9454901002199951)
+Score sum (with 1350 features):	0.9339853300733496 (test:	0.9418235150329992)
+Score PCA (with 25 cpts):	0.8855745721271394 (test:	0.9076020532877047)
+Score PCA with Whiten (with 16 cpts):	0.8880195599022005 (test:	0.9041799071131753)
+================================================
+Test: Depth Importance (etc max_depth)
+================================================
+Raw: Best score with a max depth of 69 (test set 0.947934490344659):	0.9354523227383863 on the validation set
+PCA: Best score with a max depth of 54 (test set 0.806159863114153):	0.7867970660146699 on the validation set
+PCA with whiten: Best score with a max depth of 79 (test set 0.8064043021266194):	0.7872860635696821 on the validation set
+================================================
+Test: Spaciality Importance (tile size)
+================================================
+train set size: 15427
+test set size: 4407
+validation set size: 2204
+Score with a slice size of 1:	0.9437258906285455
+train set size: 15230
+test set size: 4351
+validation set size: 2175
+Score with a slice size of 2:	0.9627671799586301
+train set size: 14661
+test set size: 4188
+validation set size: 2094
+Score with a slice size of 3:	0.9672874880611271
+train set size: 14304
+test set size: 4086
+validation set size: 2044
+Score with a slice size of 4:	0.9762604013705335
+train set size: 13664
+test set size: 3904
+validation set size: 1952
+Score with a slice size of 5:	0.9779713114754098
+train set size: 13247
+test set size: 3784
+validation set size: 1892
+Score with a slice size of 6:	0.9859936575052854
+train set size: 12596
+test set size: 3598
+validation set size: 1799
+Score with a slice size of 7:	0.9872151195108394
+train set size: 12147
+test set size: 3470
+validation set size: 1735
+Score with a slice size of 8:	0.9922190201729106
+train set size: 11515
+test set size: 3290
+validation set size: 1645
+Score with a slice size of 9:	0.9851063829787234
+train set size: 11060
+test set size: 3160
+validation set size: 1580
+Score with a slice size of 10:	0.9933544303797468
+Best score with a slice size of 10 (test set 0.9933544303797468):	0.9930379746835443 on the validation set
+ExtraTreesClassifier with 1000 estimators
+================================================
+Test: Comparaison Of Feature Importance Measure
+================================================
+getting feature importances from ETC
+getting feature importances from f_classif
+getting feature importances from chi2
+getting sum of ETC, chi2 and f_classif
+train set size: 14319
+test set size: 4091
+validation set size: 2045
+
+Scores with best 1650 features/components:
+
+Scores before PCA:
+	 -imp :	0.9445123441701295
+	 -f_classif :	0.9459789782449279
+	 -chi2 :	0.9464678562698606
+	 -Sum :	0.9459789782449279
+Score after PCA: 0.8039599120019555
+Score after PCA with whiten: 0.8049376680518211
+
+Scores with best 1550 features/components:
+
+Scores before PCA:
+	 -imp :	0.9447567831825959
+	 -f_classif :	0.9459789782449279
+	 -chi2 :	0.9469567342947934
+	 -Sum :	0.9425568320703984
+Score after PCA: 0.8039599120019555
+Score after PCA with whiten: 0.806159863114153
+
+Scores with best 1450 features/components:
+
+Scores before PCA:
+	 -imp :	0.9457345392324615
+	 -f_classif :	0.9464678562698606
+	 -chi2 :	0.946712295282327
+	 -Sum :	0.943534588120264
+Score after PCA: 0.8046932290393547
+Score after PCA with whiten: 0.806159863114153
+
+Scores with best 1350 features/components:
+
+Scores before PCA:
+	 -imp :	0.9464678562698606
+	 -f_classif :	0.946712295282327
+	 -chi2 :	0.947934490344659
+	 -Sum :	0.9393791249083354
+Score after PCA: 0.8071376191640186
+Score after PCA with whiten: 0.8086042532388169
+
+Scores with best 1250 features/components:
+
+Scores before PCA:
+	 -imp :	0.9469567342947934
+	 -f_classif :	0.9464678562698606
+	 -chi2 :	0.9469567342947934
+	 -Sum :	0.9403568809582009
+Score after PCA: 0.8098264483011489
+Score after PCA with whiten: 0.807382058176485
+
+Scores with best 1150 features/components:
+
+Scores before PCA:
+	 -imp :	0.9452456612075287
+	 -f_classif :	0.9447567831825959
+	 -chi2 :	0.9464678562698606
+	 -Sum :	0.9413346370080665
+Score after PCA: 0.8088486922512833
+Score after PCA with whiten: 0.8098264483011489
+
+Scores with best 1050 features/components:
+
+Scores before PCA:
+	 -imp :	0.946712295282327
+	 -f_classif :	0.9440234661451967
+	 -chi2 :	0.9440234661451967
+	 -Sum :	0.9406013199706673
+Score after PCA: 0.8166707406502077
+Score after PCA with whiten: 0.814959667562943
+
+Scores with best 950 features/components:
+
+Scores before PCA:
+	 -imp :	0.9462234172573942
+	 -f_classif :	0.9418235150329992
+	 -chi2 :	0.9413346370080665
+	 -Sum :	0.9371791737961379
+Score after PCA: 0.8174040576876069
+Score after PCA with whiten: 0.8164263016377414
+
+Scores with best 850 features/components:
+
+Scores before PCA:
+	 -imp :	0.9469567342947934
+	 -f_classif :	0.9413346370080665
+	 -chi2 :	0.9384013688584698
+	 -Sum :	0.9381569298460034
+Score after PCA: 0.8247372280615987
+Score after PCA with whiten: 0.8264483011488634
+
+Scores with best 750 features/components:
+
+Scores before PCA:
+	 -imp :	0.946712295282327
+	 -f_classif :	0.9386458078709362
+	 -chi2 :	0.9362014177462723
+	 -Sum :	0.9364458567587387
+Score after PCA: 0.8281593742361281
+Score after PCA with whiten: 0.8266927401613298
+
+Scores with best 650 features/components:
+
+Scores before PCA:
+	 -imp :	0.9472011733072598
+	 -f_classif :	0.9354681007088731
+	 -chi2 :	0.933512588609142
+	 -Sum :	0.9371791737961379
+Score after PCA: 0.8342703495477878
+Score after PCA with whiten: 0.8364703006599853
+
+Scores with best 550 features/components:
+
+Scores before PCA:
+	 -imp :	0.9454901002199951
+	 -f_classif :	0.9305793204595454
+	 -chi2 :	0.929112686384747
+	 -Sum :	0.9381569298460034
+Score after PCA: 0.8416035199217795
+Score after PCA with whiten: 0.8435590320215106
+
+Scores with best 450 features/components:
+
+Scores before PCA:
+	 -imp :	0.9459789782449279
+	 -f_classif :	0.9283793693473479
+	 -chi2 :	0.9288682473722806
+	 -Sum :	0.9359569787338059
+Score after PCA: 0.8506477633830359
+Score after PCA with whiten: 0.8491811293082376
+
+Scores with best 350 features/components:
+
+Scores before PCA:
+	 -imp :	0.9469567342947934
+	 -f_classif :	0.9237350281104865
+	 -chi2 :	0.9242239061354192
+	 -Sum :	0.9344903446590076
+Score after PCA: 0.8599364458567588
+Score after PCA with whiten: 0.8587142507944268
+
+Scores with best 250 features/components:
+
+Scores before PCA:
+	 -imp :	0.9474456123197262
+	 -f_classif :	0.9156685406990955
+	 -chi2 :	0.9154241016866291
+	 -Sum :	0.9286238083598142
+Score after PCA: 0.8697140063554143
+Score after PCA with whiten: 0.8689806893180152
+
+Scores with best 150 features/components:
+
+Scores before PCA:
+	 -imp :	0.9415790760205329
+	 -f_classif :	0.8966022977267172
+	 -chi2 :	0.9041799071131753
+	 -Sum :	0.9252016621852848
+Score after PCA: 0.880224883891469
+Score after PCA with whiten: 0.8809582009288682
+
+Scores with best 50 features/components:
+
+Scores before PCA:
+	 -imp :	0.9173796137863603
+	 -f_classif :	0.8821803959912002
+	 -chi2 :	0.8807137619164018
+	 -Sum :	0.9063798582253728
+Score after PCA: 0.8946467856269861
+Score after PCA with whiten: 0.8953801026643853
+
+Scores with best 49 features/components:
+
+Scores before PCA:
+	 -imp :	0.9176240527988266
+	 -f_classif :	0.8821803959912002
+	 -chi2 :	0.8797360058665363
+	 -Sum :	0.9041799071131753
+Score after PCA: 0.8983133708139819
+Score after PCA with whiten: 0.89709117575165
+
+Scores with best 48 features/components:
+
+Scores before PCA:
+	 -imp :	0.9161574187240283
+	 -f_classif :	0.8821803959912002
+	 -chi2 :	0.8807137619164018
+	 -Sum :	0.9012466389635786
+Score after PCA: 0.8946467856269861
+Score after PCA with whiten: 0.8956245416768516
+
+Scores with best 47 features/components:
+
+Scores before PCA:
+	 -imp :	0.9183573698362258
+	 -f_classif :	0.8812026399413346
+	 -chi2 :	0.880224883891469
+	 -Sum :	0.9000244439012466
+Score after PCA: 0.8975800537765828
+Score after PCA with whiten: 0.8941579076020533
+
+Scores with best 46 features/components:
+
+Scores before PCA:
+	 -imp :	0.9154241016866291
+	 -f_classif :	0.880224883891469
+	 -chi2 :	0.880224883891469
+	 -Sum :	0.8966022977267172
+Score after PCA: 0.8973356147641164
+Score after PCA with whiten: 0.89709117575165
+
+Scores with best 45 features/components:
+
+Scores before PCA:
+	 -imp :	0.9149352236616964
+	 -f_classif :	0.8816915179662674
+	 -chi2 :	0.8787582498166707
+	 -Sum :	0.8992911268638475
+Score after PCA: 0.8961134197017844
+Score after PCA with whiten: 0.8975800537765828
+
+Scores with best 44 features/components:
+
+Scores before PCA:
+	 -imp :	0.9149352236616964
+	 -f_classif :	0.8819359569787338
+	 -chi2 :	0.8790026888291371
+	 -Sum :	0.8975800537765828
+Score after PCA: 0.8975800537765828
+Score after PCA with whiten: 0.8992911268638475
+
+Scores with best 43 features/components:
+
+Scores before PCA:
+	 -imp :	0.9149352236616964
+	 -f_classif :	0.8812026399413346
+	 -chi2 :	0.8765582987044732
+	 -Sum :	0.8988022488389147
+Score after PCA: 0.8985578098264483
+Score after PCA with whiten: 0.8988022488389147
+
+Scores with best 42 features/components:
+
+Scores before PCA:
+	 -imp :	0.91469078464923
+	 -f_classif :	0.8787582498166707
+	 -chi2 :	0.875824981667074
+	 -Sum :	0.900268882913713
+Score after PCA: 0.9000244439012466
+Score after PCA with whiten: 0.900268882913713
+
+Scores with best 41 features/components:
+
+Scores before PCA:
+	 -imp :	0.9129797115619653
+	 -f_classif :	0.8799804448790027
+	 -chi2 :	0.8738694695673429
+	 -Sum :	0.8988022488389147
+Score after PCA: 0.8997800048887803
+Score after PCA with whiten: 0.9012466389635786
+
+Scores with best 40 features/components:
+
+Scores before PCA:
+	 -imp :	0.9127352725494989
+	 -f_classif :	0.8816915179662674
+	 -chi2 :	0.8728917135174774
+	 -Sum :	0.8988022488389147
+Score after PCA: 0.901491077976045
+Score after PCA with whiten: 0.9010021999511122
+
+Scores with best 39 features/components:
+
+Scores before PCA:
+	 -imp :	0.9129797115619653
+	 -f_classif :	0.8780249327792715
+	 -chi2 :	0.8724028354925446
+	 -Sum :	0.8975800537765828
+Score after PCA: 0.900268882913713
+Score after PCA with whiten: 0.9029577120508433
+
+Scores with best 38 features/components:
+
+Scores before PCA:
+	 -imp :	0.9122463945245661
+	 -f_classif :	0.8780249327792715
+	 -chi2 :	0.8728917135174774
+	 -Sum :	0.8975800537765828
+Score after PCA: 0.9024688340259105
+Score after PCA with whiten: 0.9012466389635786
+
+Scores with best 37 features/components:
+
+Scores before PCA:
+	 -imp :	0.904668785138108
+	 -f_classif :	0.8777804937668052
+	 -chi2 :	0.8714250794426791
+	 -Sum :	0.8963578587142508
+Score after PCA: 0.9024688340259105
+Score after PCA with whiten: 0.9036910290882425
+
+Scores with best 36 features/components:
+
+Scores before PCA:
+	 -imp :	0.9032021510633097
+	 -f_classif :	0.8785138108042043
+	 -chi2 :	0.8716695184551454
+	 -Sum :	0.89709117575165
+Score after PCA: 0.9022243950134441
+Score after PCA with whiten: 0.9024688340259105
+
+Scores with best 35 features/components:
+
+Scores before PCA:
+	 -imp :	0.9032021510633097
+	 -f_classif :	0.8777804937668052
+	 -chi2 :	0.8697140063554143
+	 -Sum :	0.8941579076020533
+Score after PCA: 0.9000244439012466
+Score after PCA with whiten: 0.9024688340259105
+
+Scores with best 34 features/components:
+
+Scores before PCA:
+	 -imp :	0.8919579564898558
+	 -f_classif :	0.8768027377169396
+	 -chi2 :	0.8687362503055488
+	 -Sum :	0.8919579564898558
+Score after PCA: 0.8997800048887803
+Score after PCA with whiten: 0.900268882913713
+
+Scores with best 33 features/components:
+
+Scores before PCA:
+	 -imp :	0.8946467856269861
+	 -f_classif :	0.8785138108042043
+	 -chi2 :	0.8711806404302127
+	 -Sum :	0.8885358103153264
+Score after PCA: 0.901491077976045
+Score after PCA with whiten: 0.9024688340259105
+
+Scores with best 32 features/components:
+
+Scores before PCA:
+	 -imp :	0.8946467856269861
+	 -f_classif :	0.8790026888291371
+	 -chi2 :	0.8728917135174774
+	 -Sum :	0.8819359569787338
+Score after PCA: 0.9010021999511122
+Score after PCA with whiten: 0.9010021999511122
+
+Scores with best 31 features/components:
+
+Scores before PCA:
+	 -imp :	0.8909802004399903
+	 -f_classif :	0.8768027377169396
+	 -chi2 :	0.8721583964800782
+	 -Sum :	0.8819359569787338
+Score after PCA: 0.9010021999511122
+Score after PCA with whiten: 0.9017355169885114
+
+Scores with best 30 features/components:
+
+Scores before PCA:
+	 -imp :	0.892691273527255
+	 -f_classif :	0.8755805426546077
+	 -chi2 :	0.8716695184551454
+	 -Sum :	0.8812026399413346
+Score after PCA: 0.9032021510633097
+Score after PCA with whiten: 0.9041799071131753
+
+Scores with best 29 features/components:
+
+Scores before PCA:
+	 -imp :	0.8902468834025911
+	 -f_classif :	0.8721583964800782
+	 -chi2 :	0.8711806404302127
+	 -Sum :	0.8819359569787338
+Score after PCA: 0.9027132730383769
+Score after PCA with whiten: 0.9019799560009778
+
+Scores with best 28 features/components:
+
+Scores before PCA:
+	 -imp :	0.8907357614275239
+	 -f_classif :	0.8711806404302127
+	 -chi2 :	0.8699584453678807
+	 -Sum :	0.8733805915424102
+Score after PCA: 0.9044243461256416
+Score after PCA with whiten: 0.9039354681007089
+
+Scores with best 27 features/components:
+
+Scores before PCA:
+	 -imp :	0.8902468834025911
+	 -f_classif :	0.8716695184551454
+	 -chi2 :	0.8648252261060866
+	 -Sum :	0.8750916646296749
+Score after PCA: 0.9054021021755072
+Score after PCA with whiten: 0.9041799071131753
+
+Scores with best 26 features/components:
+
+Scores before PCA:
+	 -imp :	0.8919579564898558
+	 -f_classif :	0.8719139574676118
+	 -chi2 :	0.8587142507944268
+	 -Sum :	0.8711806404302127
+Score after PCA: 0.9054021021755072
+Score after PCA with whiten: 0.9051576631630408
+
+Scores with best 25 features/components:
+
+Scores before PCA:
+	 -imp :	0.8900024443901247
+	 -f_classif :	0.8711806404302127
+	 -chi2 :	0.8521143974578342
+	 -Sum :	0.8645807870936202
+Score after PCA: 0.9036910290882425
+Score after PCA with whiten: 0.9076020532877047
+
+Scores with best 24 features/components:
+
+Scores before PCA:
+	 -imp :	0.8853581031532632
+	 -f_classif :	0.8689806893180152
+	 -chi2 :	0.8516255194329015
+	 -Sum :	0.8589586898068932
+Score after PCA: 0.9049132241505744
+Score after PCA with whiten: 0.9039354681007089
+
+Scores with best 23 features/components:
+
+Scores before PCA:
+	 -imp :	0.8836470300659985
+	 -f_classif :	0.8684918112930824
+	 -chi2 :	0.8479589342459056
+	 -Sum :	0.8545587875824981
+Score after PCA: 0.9054021021755072
+Score after PCA with whiten: 0.9049132241505744
+
+Scores with best 22 features/components:
+
+Scores before PCA:
+	 -imp :	0.8824248350036665
+	 -f_classif :	0.8658029821559521
+	 -chi2 :	0.8508922023955023
+	 -Sum :	0.8486922512833048
+Score after PCA: 0.9044243461256416
+Score after PCA with whiten: 0.9044243461256416
+
+Scores with best 21 features/components:
+
+Scores before PCA:
+	 -imp :	0.8821803959912002
+	 -f_classif :	0.8609142019066243
+	 -chi2 :	0.849425568320704
+	 -Sum :	0.8442923490589098
+Score after PCA: 0.9054021021755072
+Score after PCA with whiten: 0.9066242972378391
+
+Scores with best 20 features/components:
+
+Scores before PCA:
+	 -imp :	0.8809582009288682
+	 -f_classif :	0.8601808848692252
+	 -chi2 :	0.8467367391835737
+	 -Sum :	0.8359814226350526
+Score after PCA: 0.9063798582253728
+Score after PCA with whiten: 0.9073576142752383
+
+Scores with best 19 features/components:
+
+Scores before PCA:
+	 -imp :	0.8780249327792715
+	 -f_classif :	0.8572476167196285
+	 -chi2 :	0.8460034221461745
+	 -Sum :	0.8345147885602542
+Score after PCA: 0.9080909313126375
+Score after PCA with whiten: 0.9078464923001711
+
+Scores with best 18 features/components:
+
+Scores before PCA:
+	 -imp :	0.8709362014177463
+	 -f_classif :	0.8499144463456367
+	 -chi2 :	0.8423368369591787
+	 -Sum :	0.8266927401613298
+Score after PCA: 0.9063798582253728
+Score after PCA with whiten: 0.9078464923001711
+
+Scores with best 17 features/components:
+
+Scores before PCA:
+	 -imp :	0.8724028354925446
+	 -f_classif :	0.849425568320704
+	 -chi2 :	0.8420923979467123
+	 -Sum :	0.8110486433634808
+Score after PCA: 0.9073576142752383
+Score after PCA with whiten: 0.9071131752627719
+
+Scores with best 16 features/components:
+
+Scores before PCA:
+	 -imp :	0.8579809337570277
+	 -f_classif :	0.8467367391835737
+	 -chi2 :	0.8354925446101198
+	 -Sum :	0.81178196040088
+Score after PCA: 0.9056465411879736
+Score after PCA with whiten: 0.9095575653874358
+
+Scores with best 15 features/components:
+
+Scores before PCA:
+	 -imp :	0.8560254216572966
+	 -f_classif :	0.8464923001711073
+	 -chi2 :	0.8330481544854559
+	 -Sum :	0.7917379613786361
+Score after PCA: 0.9049132241505744
+Score after PCA with whiten: 0.9051576631630408
+
+Scores with best 14 features/components:
+
+Scores before PCA:
+	 -imp :	0.8499144463456367
+	 -f_classif :	0.8416035199217795
+	 -chi2 :	0.8332925934979223
+	 -Sum :	0.777316059643119
+Score after PCA: 0.9066242972378391
+Score after PCA with whiten: 0.9063798582253728
+
+Scores with best 13 features/components:
+
+Scores before PCA:
+	 -imp :	0.8452701051087753
+	 -f_classif :	0.8367147396724517
+	 -chi2 :	0.827426057198729
+	 -Sum :	0.7726717184062576
+Score after PCA: 0.9051576631630408
+Score after PCA with whiten: 0.9061354192129064
+
+Scores with best 12 features/components:
+
+Scores before PCA:
+	 -imp :	0.8398924468345148
+	 -f_classif :	0.8328037154729895
+	 -chi2 :	0.8215595208995355
+	 -Sum :	0.7672940601319971
+Score after PCA: 0.9049132241505744
+Score after PCA with whiten: 0.9076020532877047
+
+Scores with best 11 features/components:
+
+Scores before PCA:
+	 -imp :	0.8396480078220484
+	 -f_classif :	0.8286482522610609
+	 -chi2 :	0.8152041065754094
+	 -Sum :	0.7509166462967489
+Score after PCA: 0.90589098020044
+Score after PCA with whiten: 0.9049132241505744
+
+Scores with best 10 features/components:
+
+Scores before PCA:
+	 -imp :	0.8315815204106576
+	 -f_classif :	0.823759472011733
+	 -chi2 :	0.8144707895380102
+	 -Sum :	0.7472500611097531
+Score after PCA: 0.9010021999511122
+Score after PCA with whiten: 0.900268882913713
+
+Scores with best 9 features/components:
+
+Scores before PCA:
+	 -imp :	0.8264483011488634
+	 -f_classif :	0.8181373747250061
+	 -chi2 :	0.8032265949645564
+	 -Sum :	0.7404057687606942
+Score after PCA: 0.8995355658763139
+Score after PCA with whiten: 0.9000244439012466
+
+Scores with best 8 features/components:
+
+Scores before PCA:
+	 -imp :	0.8181373747250061
+	 -f_classif :	0.8120263994133464
+	 -chi2 :	0.8042043510144219
+	 -Sum :	0.7342947934490345
+Score after PCA: 0.891469078464923
+Score after PCA with whiten: 0.8919579564898558
+
+Scores with best 7 features/components:
+
+Scores before PCA:
+	 -imp :	0.8120263994133464
+	 -f_classif :	0.7990711317526277
+	 -chi2 :	0.7998044487900269
+	 -Sum :	0.7340503544365681
+Score after PCA: 0.8936690295771205
+Score after PCA with whiten: 0.8931801515521878
+
+Scores with best 6 features/components:
+
+Scores before PCA:
+	 -imp :	0.7998044487900269
+	 -f_classif :	0.7934490344659008
+	 -chi2 :	0.777316059643119
+	 -Sum :	0.72647274505011
+Score after PCA: 0.887069176240528
+Score after PCA with whiten: 0.8887802493277928
+
+Scores with best 5 features/components:
+
+Scores before PCA:
+	 -imp :	0.7888046932290393
+	 -f_classif :	0.7844047910046443
+	 -chi2 :	0.7619164018577365
+	 -Sum :	0.7162063065265216
+Score after PCA: 0.8763138596920068
+Score after PCA with whiten: 0.875824981667074
+
+Scores with best 4 features/components:
+
+Scores before PCA:
+	 -imp :	0.772916157418724
+	 -f_classif :	0.774138352481056
+	 -chi2 :	0.7602053287704718
+	 -Sum :	0.707650941090198
+Score after PCA: 0.8618919579564899
+Score after PCA with whiten: 0.8589586898068932
+
+Scores with best 3 features/components:
+
+Scores before PCA:
+	 -imp :	0.758494255683207
+	 -f_classif :	0.7467611830848203
+	 -chi2 :	0.7501833292593498
+	 -Sum :	0.7081398191151308
+Score after PCA: 0.8188706917624052
+Score after PCA with whiten: 0.8191151307748716
+
+Scores with best 2 features/components:
+
+Scores before PCA:
+	 -imp :	0.7445612319726228
+	 -f_classif :	0.758494255683207
+	 -chi2 :	0.7482278171596187
+	 -Sum :	0.7118064043021266
+Score after PCA: 0.7543387924712784
+Score after PCA with whiten: 0.7560498655585431
+
+Scores with best 1 features/components:
+
+Scores before PCA:
+	 -imp :	0.7570276216084088
+	 -f_classif :	0.756538743583476
+	 -chi2 :	0.756538743583476
+	 -Sum :	0.7125397213395258
+Score after PCA: 0.6643852358836471
+Score after PCA with whiten: 0.6638963578587143
+Bests tested on validation set:
+Score imp (with 250 features):	0.9295843520782396 (test:	0.9474456123197262)
+Score f_c (with 1350 features):	0.9339853300733496 (test:	0.946712295282327)
+Score chi2 (with 1350 features):	0.9344743276283619 (test:	0.947934490344659)
+Score sum (with 1650 features):	0.9354523227383863 (test:	0.9459789782449279)
+Score PCA (with 19 cpts):	0.8860635696821516 (test:	0.9080909313126375)
+Score PCA with Whiten (with 16 cpts):	0.8894865525672372 (test:	0.9095575653874358)
+================================================
+Test: Depth Importance (etc max_depth)
+================================================
+Raw: Best score with a max depth of 65 (test set 0.9476900513321926):	0.9344743276283619 on the validation set
+PCA: Best score with a max depth of 50 (test set 0.807382058176485):	0.7897310513447433 on the validation set
+PCA with whiten: Best score with a max depth of 49 (test set 0.8066487411390858):	0.7872860635696821 on the validation set
+================================================
+Test: Spaciality Importance (tile size)
+================================================
+train set size: 15427
+test set size: 4407
+validation set size: 2204
+Score with a slice size of 1:	0.9507601542999773
+train set size: 15230
+test set size: 4351
+validation set size: 2175
+Score with a slice size of 2:	0.9664444955182716
+train set size: 14661
+test set size: 4188
+validation set size: 2094
+Score with a slice size of 3:	0.974450811843362
+train set size: 14304
+test set size: 4086
+validation set size: 2044
+Score with a slice size of 4:	0.9845814977973568
+train set size: 13664
+test set size: 3904
+validation set size: 1952
+Score with a slice size of 5:	0.9833504098360656
+train set size: 13247
+test set size: 3784
+validation set size: 1892
+Score with a slice size of 6:	0.9867864693446089
+train set size: 12596
+test set size: 3598
+validation set size: 1799
+Score with a slice size of 7:	0.9858254585881046
+train set size: 12147
+test set size: 3470
+validation set size: 1735
+Score with a slice size of 8:	0.9942363112391931
+train set size: 11515
+test set size: 3290
+validation set size: 1645
+Score with a slice size of 9:	0.988145896656535
+train set size: 11060
+test set size: 3160
+validation set size: 1580
+Score with a slice size of 10:	0.9924050632911392
+Best score with a slice size of 8 (test set 0.9942363112391931):	0.992507204610951 on the validation set
+================================================
+Test: explained variance ratio in PCA
+================================================
+ratio explained >= 0.90 with 17 components
+ratio explained >= 0.91 with 20 components
+ratio explained >= 0.92 with 24 components
+ratio explained >= 0.93 with 30 components
+ratio explained >= 0.94 with 39 components
+ratio explained >= 0.95 with 53 components
+ratio explained >= 0.96 with 73 components
+ratio explained >= 0.97 with 106 components
+ratio explained >= 0.98 with 165 components
+ratio explained >= 0.99 with 291 components
+ratio explained >= 1.00 with 1650 components

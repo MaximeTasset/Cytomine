@@ -77,7 +77,7 @@ def main(argv):
 
 
       ext.loadDataFromCytomine(imagegroup_id_list=imagegroup_ids,id_project = id_project,
-                               id_users=users_annotation,predict_terms_list=predict_terms_list)
+                               id_users=users_annotation,predict_terms_list=predict_terms_list,pixel_border=slice_size[0]-1)
 
       os.makedirs(save_path,exist_ok=True)
 

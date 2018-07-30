@@ -89,12 +89,15 @@ class SpectralModel:
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
 
-    def fit(self,X,y,use=0.8):
+    def fit(self,X,y=None,use=0.8):
         """
-        " Xs: a list of n array-like or sparse matrix, shape=(width,heigth, n_features) Training instances to labeled clusters.
-        " y: a list of n array-like of shape =(width,heigth) The target values (class labels).
+        " X: a list of n array-like or sparse matrix, shape = (width,heigth, n_features) Training instances to labeled clusters.
+        " y: a list of n array-like of shape = (width,heigth) The target values (class labels).
+        " Note: if y is None, then X is a list of tuple (x,y) with
+        "                     - x array-like or sparse matrix, shape = (width,heigth, n_features)
+        "                     - y array-like of shape = (width,heigth)
         """
-        X,y = Extractor().rois2data(zip(X,y),self.sliceSize,self.step,self.notALabelFlag)
+        X,y = Extractor().rois2data(zip(X,y) if not y is None else X,self.sliceSize,self.step,self.notALabelFlag)
         self.labels = np.unique(y)
         self.estimators = []
         ln = len(y)

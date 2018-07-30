@@ -37,9 +37,10 @@ import sys
 import six
 import socket,time
 import psutil
+import gzip
 
 class Extractor:
-    def __init__(self, filename=None,file_type=None,verbose=True,nb_job=1):
+    def __init__(self, filename=None,verbose=True,nb_job=1):
         """
         Parameters
         ----------
@@ -53,14 +54,6 @@ class Extractor:
         self.pool = ThreadPool(self.nb_job)
 
         self.data = None
-        if not file_type:
-            return
-        elif file_type == "text":
-            self.readFromTextFile()
-        elif file_type == "binary":
-            self.readFromBinaryFile()
-        else:
-            raise ValueError("error: expected \"binary\" or \"text\"")
 
     def _populate(self):
         if hasattr(self,'data'):
@@ -74,14 +67,16 @@ class Extractor:
         elif not filename:
             raise ValueError("No filename given")
 
-        f = open(filename, "rb")
         try:
-            self.data = pickle.load(f)
-            self._populate()
-        finally:
-            f.close()
+            with gzip.open(filename,'rb') as f:
+                self.data = pickle.load(f)
+        except OSError:
+            with open(filename, "rb") as f:
+                self.data = pickle.load(f)
+        self._populate()
 
-    def writeFile(self,filename=None,data=None):
+
+    def writeFile(self,filename=None,data=None,compressed=True,compresslevel=4):
         if not filename and self.filename:
              filename = self.filename
         elif not filename:
@@ -91,11 +86,12 @@ class Extractor:
         elif not data:
             raise ValueError("No data")
 
-        f = open(filename, "wb")
+        f = open(filename, "wb") if not compressed else gzip.open(filename, "wb")
         try:
             pickle.dump(data,f,pickle.HIGHEST_PROTOCOL)
         finally:
             f.close()
+
 
     def chi2(self, sort=False, N=0,usedata=1):
         n_sample = len(self.X)
@@ -264,6 +260,7 @@ class Extractor:
                                                                showTerm=True).fetch()]
                   else:
                       def ann(id_user) :
+                        global image
                         return AnnotationCollection(project=id_project, user=id_user, image=image.id, term=None,
                                                                showMeta=None, bbox=None, bboxAnnotation=None, reviewed=False,
                                                                showTerm=True).fetch()
@@ -304,7 +301,7 @@ class Extractor:
                             if sizew > 1 and sizeh > 1:
                               requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
                             else:
-                              print("error, cannot retreive data")
+                              print("error, cannot retrieve data")
                             continue
                           except socket.timeout :
                             print(socket.timeout)
@@ -312,7 +309,7 @@ class Extractor:
                             if sizew > 1 and sizeh > 1:
                               requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
                             else:
-                              print("error, cannot retreive data")
+                              print("error, cannot retrieve data")
 
                             continue
 
