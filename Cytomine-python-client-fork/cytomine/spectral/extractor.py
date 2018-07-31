@@ -27,6 +27,8 @@ from ..models import ImageGroupHDF5,ImageSequenceCollection,ImageGroup,ImageGrou
 from multiprocessing import RLock
 from multiprocessing.pool import ThreadPool
 from shapely.geometry import Polygon,Point
+from shapely.geometry.geo import box
+
 from shapely.wkt import loads
 import pickle
 from heapq import nlargest
@@ -191,7 +193,7 @@ class Extractor:
                   writer.writerow({'term_name':self.mapIdTerm[i],'nb_annotation':self.numAnnotationTerm[i], 'nb_pixel':self.numPixelTerm[i]})
 
 
-    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = None,id_users=None,predict_terms_list=None,max_fetch_size=(10,10),pixel_border=0):
+    def loadDataFromCytomine(self,imagegroup_id_list=None,id_project = None,id_users=None,predict_terms_list=None,max_fetch_size=(10,10),pixel_border=0,trim=False):
         """
         " read the annotations of a list of imagegroup from a project
         """
@@ -267,23 +269,36 @@ class Extractor:
 
                       annotations_list = self.pool.map(ann,id_users)
 
-
+                  width = image.width
+                  height = image.height
                   annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
+#                  print(width,height)
+#                  return polyss,rect
 
                   for id in dic:
-                    nb_annotation_term[id] += dic[id]
+                      nb_annotation_term[id] += dic[id]
                   nb_annotation += nb_ann
 
-
+                  #TODO modify to remove unwanted data (ie trim the rectangle for only get as few unkown pixel as possible)
                   if self.verbose:
                       rl = RLock()
                       nb = len(rect)
                       self.done = 0
                   #function made on fly to fetch rectangles
-                  def getRect(rectangle):
+                  def getRect(rect_poly):
+                      rectangle,poly = rect_poly
                       sp = None
                       im =  ImageGroupHDF5(id=imagegroupHDF5)
-                      requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                      if not trim:
+                          requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                      else:
+                          #TODO make sure that data forms a rectangle for the rois
+                          #Note: The height are inverted...
+                          rec = (rectangle[0],height-(rectangle[1]+rectangle[3]),rectangle[2],rectangle[3])
+                          requests = removeUnWantedRect(rec,poly.buffer(pixel_border),max_fetch_size)
+                          requests = [(r[0],height-(r[1]+r[3]),r[2],r[3]) for r in requests]
+
+
                       if self.verbose:
                           with rl:
                               sys.stdout.write("\r{}/{}      ".format(self.done,nb))
@@ -318,10 +333,19 @@ class Extractor:
                               self.done += 1
                               sys.stdout.write("\r{}/{}      ".format(self.done,nb))
                               sys.stdout.flush()
-                      sp.sort(key=lambda data: data["pxl"])
+                      if trim:
+                          dsp = {tuple(data['pxl']):data for data in sp}
+                          sti = rectangle[0]
+                          stj = rectangle[1]
+                          si = rectangle[2]
+                          sj = rectangle[3]
+                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image),"fetched":False} for i,j in np.ndindex((si,sj))]
+                      else:
+                          sp.sort(key=lambda data: data["pxl"])
+
                       return sp
 
-                  spectras = self.pool.map(getRect,rect)
+                  spectras = self.pool.map(getRect,zip(rect,polyss))
                   for j,s in enumerate(spectras):
                      if s is not None and len(s):
                          annot.append(annott[j])
@@ -342,30 +366,36 @@ class Extractor:
 
         for i in range(len(spect)):
 
-#            roi = [np.zeros((rois[i][2],rois[i][3],nimage),dtype=np.uint8) for _ in range(len(annot[i].term))]
-
             spectrum = [pixel for pixel in spect[i]]
-            spectrum.sort(key=lambda spectra: spectra['pxl'])
+            spectrum.sort(key=lambda spectra: tuple(spectra['pxl']))
             image = np.array([spectra['spectra'] for spectra in spectrum])
             image_coord = np.array([spectra['pxl'] for spectra in spectrum])
+            if trim:
+                lookat = np.array([0 if 'fetched' in spectra else 1 for spectra in spectrum])
             del spectrum
 
             image = np.expand_dims(image,axis=1)
             image = image.reshape((rois[i][2],rois[i][3], nimage))
+            image = image.astype(np.uint8)
             roi = [image.copy() for _ in range(len(annot[i].term))]
             del image
             roil = [np.zeros((rois[i][2],rois[i][3]),dtype=int) for _ in range(len(annot[i].term))]
 
             image_coord = np.expand_dims(image_coord,axis=1)
             image_coord = image_coord.reshape((rois[i][2],rois[i][3], 2))
+            if trim:
+                lookat = np.expand_dims(lookat,axis=1)
+                lookat = lookat.reshape((rois[i][2],rois[i][3]))
+
 
             for position in np.ndindex(image_coord.shape[:2]):
+                if trim and not lookat[position]:
+                    continue
                 lp = [image_coord[position][0],rois[i][4]-image_coord[position][1]]
                 p = Point(lp)
                 if polys[i].contains(p):
-                    if len(annot[i].term):
-                        for t in range(len(annot[i].term)):
-                            roil[t][position] = annot[i].term[0]
+                    for t in range(len(annot[i].term)):
+                        roil[t][position] = annot[i].term[t]
                     for term in annot[i].term:
                         dataCoord.append(lp)
                         dataX.append(roi[0][position])
@@ -381,32 +411,7 @@ class Extractor:
                     if unknown:
                         unknownCoord.append(lp)
                         unknownX.append(roi[0][position])
-#            for pixel in spect[i]:
-#                #conversion to Cytomine down-left (0,0) coordonate
-#                lp = [pixel['pxl'][0],rois[i][4]-pixel['pxl'][1]]
-#                for t in range(len(annot[i].term)):
-#                    roi[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = pixel['spectra']
-#                p = Point(lp)
-#                if polys[i].contains(p):
-#                    if len(annot[i].term):
-#                        for t in range(len(annot[i].term)):
-#                            roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[i].term[0]
-#
-#                    for term in annot[i].term:
-#                      dataCoord.append(lp)
-#                      dataX.append(pixel['spectra'])
-#                      dataY.append(term)
-#                else:
-#                    unknown = True
-#                    for a,pol in enumerate(polys):
-#                        if pol.contains(p):
-#                            for t in range(len(annot[i].term)):
-#                                roil[t][int(abs(lp[0]-rois[i][0])-1),int(abs(lp[1]-rois[i][1])-1)] = annot[a].term[0]
-#                            unknown = False
-#                            break
-#                    if unknown:
-#                        unknownCoord.append(lp)
-#                        unknownX.append(pixel['spectra'])
+
             self.rois.extend([(roi[t],roil[t]) for t in range(len(annot[i].term))])
 
 
@@ -416,6 +421,9 @@ class Extractor:
                      "Y":np.asarray(dataY),
                      "unknown_coord":np.asarray(unknownCoord),
                      "unknown_X":np.asarray(unknownX)}
+
+        self.data["width"] = width
+        self.data["height"] = height
         self.data["rois"] = self.rois
         self.data["numData"] = int(len(dataCoord))
         self.data["numUnknown"] = int(len(unknownCoord))
@@ -584,6 +592,53 @@ def polygonToAnnotation(polygon):
 
     #actual annotation's polygon
     return Polygon(ext).buffer(0)
+
+
+#def removeUnWantedRect(rectangle,polygon,max_size=(10,10)):
+#    """
+#    " rectangle a tuple (minx,miny,sizex,sizey)
+#    " polygon a shepley.geometry.Polygon
+#    " max_size a tuple (max_size_x,max_size_y) the maximum size of the returned rectangles
+#    "
+#    " Return a list of tuple (minx,miny,sizex,sizey) which corresponds to rectangles
+#    " include in 'rectangle' and that intersect 'polygon'. sizex <= ,sizey <=
+#    "
+#    """
+#    if (np.array(rectangle[2:]) - np.array(max_size) <= 0).all():
+#        return [rectangle]
+#    else:
+#
+#        newwidth =  (int(np.floor(rectangle[2]/2.0)),int(np.ceil(rectangle[2]/2.0))) if rectangle[2] > max_size[0] else (rectangle[2],rectangle[2])
+#        newheight = (int(np.floor(rectangle[3]/2.0)),int(np.ceil(rectangle[3]/2.0))) if rectangle[3] > max_size[1] else (rectangle[3],rectangle[3])
+#
+#        coord = [(rectangle[0],rectangle[1],newwidth[0],newheight[0])]
+#        coord.append((rectangle[0],rectangle[1]+newheight[0],newwidth[0],newheight[1]))
+#        coord.append((rectangle[0]+newwidth[0],rectangle[1],newwidth[1],newheight[0]))
+#        coord.append((rectangle[0]+newwidth[0],rectangle[1]+newheight[0],newwidth[1],newheight[1]))
+#
+#        new_rectangles = []
+#        for rect in coord:
+#            minx,miny,maxx,maxy = rect[0],rect[1],rect[0]+rect[2],rect[1]+rect[3]
+#            pol = box(minx,miny,maxx,maxy)
+#            #only add rectangle that intersect 'polygon'
+#            if pol.intersects(polygon):
+#                new_rectangles.extend(removeUnWantedRect(rect,polygon,max_size))
+#        return new_rectangles
+
+def removeUnWantedRect(rectangle,polygon,max_size=(10,10)):
+    """
+    " rectangle a tuple (minx,miny,sizex,sizey)
+    " polygon a shepley.geometry.Polygon
+    " max_size a tuple (max_size_x,max_size_y) the maximum size of the returned rectangles
+    "
+    " Return a list of tuple (minx,miny,sizex,sizey) which corresponds to rectangles
+    " include in 'rectangle' and that intersect 'polygon'. sizex <= ,sizey <=
+    "
+    """
+    rects = splitRect(rectangle,max_size[0],max_size[1])
+    return [rect for rect in rects if box(rect[0],rect[1],rect[0]+rect[2],rect[1]+rect[3]).intersects(polygon)]
+
+
 
 def split(array3D):
     """
