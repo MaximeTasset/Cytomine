@@ -91,7 +91,7 @@ def test_comparaisonFeatureImportance():
     print("Test: Comparaison Of Feature Importance Measure")
     print("================================================")
     print("getting feature importances from ETC")
-    imp_val = ext.features_ETC(n_estimators=100)
+    imp_val = ext.features_ETC(n_estimators=n_estimators)
     imp = [i for imp,i in sorted(imp_val)]
     imp.reverse()
     print("getting feature importances from f_classif")
@@ -333,7 +333,7 @@ def test_Spaciality():
     print("================================================")
     best = (0,0,0)
     for i in range(1,11):
-        X,y = ext.rois2data(None,(i,i))
+        X,y = ext.rois2data(None,(i,i),bands=best_FI["imp"][2][:best_FI["imp"][0]])
         indexes = list(range(X.shape[0]))
         shuffle(indexes)
         train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
@@ -362,7 +362,6 @@ def test_Spaciality():
 
 
 if __name__ == '__main__':
-
     for n_estimators in [100,1000]:
         print("ExtraTreesClassifier with {} estimators".format(n_estimators))
         etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)

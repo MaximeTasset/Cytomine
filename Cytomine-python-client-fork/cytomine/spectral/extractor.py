@@ -436,7 +436,7 @@ class Extractor:
         self._populate()
 
 
-    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True):
+    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None):
         """
         rois a list of tuple (np.array((width,height,features)),np.array((width,height)))
         """
@@ -450,7 +450,7 @@ class Extractor:
         x = []
         y = []
         for roi,labels in rois:
-            for rect,coord in roi2data(roi,sliceSize,step,flatten):
+            for rect,coord in roi2data(roi,sliceSize,step,flatten,bands=bands):
                 ic,jc = coord
                 if labels[ic,jc] != notALabelFlag:
                     x.append(rect)
@@ -463,7 +463,7 @@ class Extractor:
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
 
-def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False):
+def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None):
         """
         roi a np.array((width,height,features))
 
@@ -473,6 +473,8 @@ def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False):
         else:
           x = []
           coord = []
+        if bands is None:
+            bands = list(range(roi.shape[2]))
 
         for i in range(0,roi.shape[0]-sliceSize[0],step):
             for j in range(0,roi.shape[1]-sliceSize[1],step):
@@ -480,15 +482,15 @@ def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False):
                 jc = int(abs(2*j+sliceSize[1])/2)
                 if not splitted:
                     if flatten:
-                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten(),(ic,jc)))
+                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1],bands].flatten(),(ic,jc)))
                     else:
-                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1]],(ic,jc)))
+                        x_coord.append((roi[i:i+sliceSize[0],j:j+sliceSize[1],bands],(ic,jc)))
                 else:
                     if flatten:
-                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]].flatten())
+                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1],bands].flatten())
                         coord.append((ic,jc))
                     else:
-                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1]])
+                        x.append(roi[i:i+sliceSize[0],j:j+sliceSize[1],bands])
                         coord.append((ic,jc))
 
         if splitted:
