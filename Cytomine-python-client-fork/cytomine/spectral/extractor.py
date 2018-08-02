@@ -53,7 +53,7 @@ class Extractor:
         self.filename = filename
         self.nb_job = nb_job if nb_job > 0 else max(psutil.cpu_count() + nb_job,1)
         self.verbose = verbose
-        self.pool = ThreadPool(self.nb_job)
+
 
         self.data = None
 
@@ -230,136 +230,140 @@ class Extractor:
         annot = []
         rois = []
 
-        nb_fetched_image = 1
+        pool = ThreadPool(self.nb_job)
+        try:
+            nb_fetched_image = 1
 
-        for imagegroup_id in imagegroup_id_list:
-            #Get project imagegroupHDF5 and images from imagegroup_id
-            imagegroupHDF5 = ImageGroup(id=imagegroup_id).image_groupHDF5()
-            if not imagegroupHDF5:
-                continue
-            else:
-              imagegroupHDF5 = imagegroupHDF5.id
-              id_project = ImageGroup(id=imagegroup_id).fetch().project
+            for imagegroup_id in imagegroup_id_list:
+                #Get project imagegroupHDF5 and images from imagegroup_id
+                imagegroupHDF5 = ImageGroup(id=imagegroup_id).image_groupHDF5()
+                if not imagegroupHDF5:
+                    continue
+                else:
+                  imagegroupHDF5 = imagegroupHDF5.id
+                  id_project = ImageGroup(id=imagegroup_id).fetch().project
 
-            #allow to get only the images used in the HDF5 imageGroup
-            images = ImageSequenceCollection(filters={"imagegroup":imagegroup_id}).fetch()
-            if not images:
-                continue
-            if self.verbose:
-                nb_image = len(images)
-            for im in images:
-
+                #allow to get only the images used in the HDF5 imageGroup
+                images = ImageSequenceCollection(filters={"imagegroup":imagegroup_id}).fetch()
+                if not images:
+                    continue
                 if self.verbose:
-                    sys.stdout.write("\r                 {}/{}      ".format(nb_fetched_image,nb_image))
-                    sys.stdout.flush()
-                nb_fetched_image += 1
-                image = ImageInstance(id=im.image).fetch()
-                if image.numberOfAnnotations:
-                  #Get annotations in this image
-                  if id_users is None:
-                      annotations_list = [AnnotationCollection(project=id_project, user=None, image=image.id, term=None,
-                                                               showMeta=None, bbox=None, bboxAnnotation=None, reviewed=False,
-                                                               showTerm=True).fetch()]
-                  else:
-                      def ann(id_user) :
-                        global image
-                        return AnnotationCollection(project=id_project, user=id_user, image=image.id, term=None,
-                                                               showMeta=None, bbox=None, bboxAnnotation=None, reviewed=False,
-                                                               showTerm=True).fetch()
+                    nb_image = len(images)
+                for im in images:
 
-                      annotations_list = self.pool.map(ann,id_users)
-
-                  width = image.width
-                  height = image.height
-                  annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
-#                  print(width,height)
-#                  return polyss,rect
-
-                  for id in dic:
-                      nb_annotation_term[id] += dic[id]
-                  nb_annotation += nb_ann
-
-                  if self.verbose:
-                      rl = RLock()
-                      nb = len(rect)
-                      self.done = 0
-                  #function made on fly to fetch rectangles
-                  def getRect(rect_poly):
-                      rectangle,poly = rect_poly
-                      sp = None
-                      im =  ImageGroupHDF5(id=imagegroupHDF5)
-                      if not trim:
-                          requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                    if self.verbose:
+                        sys.stdout.write("\r                 {}/{}      ".format(nb_fetched_image,nb_image))
+                        sys.stdout.flush()
+                    nb_fetched_image += 1
+                    image = ImageInstance(id=im.image).fetch()
+                    if image.numberOfAnnotations:
+                      #Get annotations in this image
+                      if id_users is None:
+                          annotations_list = [AnnotationCollection(project=id_project, user=None, image=image.id, term=None,
+                                                                   showMeta=None, bbox=None, bboxAnnotation=None, reviewed=False,
+                                                                   showTerm=True).fetch()]
                       else:
-                          rec = (rectangle[0],height-(rectangle[1]+rectangle[3]),rectangle[2],rectangle[3])
-                          requests = removeUnWantedRect(rec,poly.buffer(pixel_border),max_fetch_size)
-                          requests = [(r[0],height-(r[1]+r[3]),r[2],r[3]) for r in requests]
+                          def ann(id_user) :
+                            global image
+                            return AnnotationCollection(project=id_project, user=id_user, image=image.id, term=None,
+                                                                   showMeta=None, bbox=None, bboxAnnotation=None, reviewed=False,
+                                                                   showTerm=True).fetch()
 
+                          annotations_list = pool.map(ann,id_users)
+
+                      width = image.width
+                      height = image.height
+                      annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
+    #                  print(width,height)
+    #                  return polyss,rect
+
+                      for id in dic:
+                          nb_annotation_term[id] += dic[id]
+                      nb_annotation += nb_ann
 
                       if self.verbose:
-                          with rl:
-                              sys.stdout.write("\r{}/{}      ".format(self.done,nb))
-                              sys.stdout.flush()
-                      while len(requests):
-                          (w,h,sizew,sizeh) = requests.pop()
-                          try:
-                            if sp is None:
-                                sp = im.rectangle_all(w,h,sizew,sizeh)
-                            else:
-                                sp += im.rectangle_all(w,h,sizew,sizeh)
-                          except socket.error :
-                            print(socket.error)
-                            time.sleep(5)
-                            if sizew > 1 and sizeh > 1:
-                              requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
-                            else:
-                              print("error, cannot retrieve data")
-                            continue
-                          except socket.timeout :
-                            print(socket.timeout)
-                            time.sleep(5)
-                            if sizew > 1 and sizeh > 1:
-                              requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
-                            else:
-                              print("error, cannot retrieve data")
-
-                            continue
-
-                      if self.verbose:
-                          with rl:
-                              self.done += 1
-                              sys.stdout.write("\r{}/{}      ".format(self.done,nb))
-                              sys.stdout.flush()
-                      if trim:
-                          dsp = {tuple(data['pxl']):data for data in sp}
-                          sti = rectangle[0]
-                          stj = rectangle[1]
-                          si = rectangle[2]
-                          sj = rectangle[3]
-                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
-                      else:
-                          sp.sort(key=lambda data: data["pxl"])
-
-                      return sp
-
-                  spectras = []
-                  requests = list(zip(rect,polyss))
-                  while self.nb_job < len(requests):
-                      tmp_req = []
-                      for _ in range(self.nb_job):
-                          tmp_req.append(requests.pop(0))
-                      spectras.extend(self.pool.map(getRect,tmp_req))
-
-                  spectras.extend(self.pool.map(getRect,requests))
+                          rl = RLock()
+                          nb = len(rect)
+                          self.done = 0
+                      #function made on fly to fetch rectangles
+                      def getRect(rect_poly):
+                          rectangle,poly = rect_poly
+                          sp = None
+                          im =  ImageGroupHDF5(id=imagegroupHDF5)
+                          if not trim:
+                              requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
+                          else:
+                              rec = (rectangle[0],height-(rectangle[1]+rectangle[3]),rectangle[2],rectangle[3])
+                              requests = removeUnWantedRect(rec,poly.buffer(pixel_border),max_fetch_size)
+                              requests = [(r[0],height-(r[1]+r[3]),r[2],r[3]) for r in requests]
 
 
-                  for j,s in enumerate(spectras):
-                     if s is not None and len(s):
-                         annot.append(annott[j])
-                         polys.append(polyss[j])
-                         rois.append(roiss[j])
-                         spect.append(s)
-                         nimage=len(s[0]['spectra'])
+                          if self.verbose:
+                              with rl:
+                                  sys.stdout.write("\r{}/{}      ".format(self.done,nb))
+                                  sys.stdout.flush()
+                          while len(requests):
+                              (w,h,sizew,sizeh) = requests.pop()
+                              try:
+                                if sp is None:
+                                    sp = im.rectangle_all(w,h,sizew,sizeh)
+                                else:
+                                    sp += im.rectangle_all(w,h,sizew,sizeh)
+                              except socket.error :
+                                print(socket.error)
+                                time.sleep(5)
+                                if sizew > 1 and sizeh > 1:
+                                  requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                                else:
+                                  print("error, cannot retrieve data")
+                                continue
+                              except socket.timeout :
+                                print(socket.timeout)
+                                time.sleep(5)
+                                if sizew > 1 and sizeh > 1:
+                                  requests.extend(splitRect((w,h,sizew,sizeh),sizew/2,sizeh/2))
+                                else:
+                                  print("error, cannot retrieve data")
+
+                                continue
+
+                          if self.verbose:
+                              with rl:
+                                  self.done += 1
+                                  sys.stdout.write("\r{}/{}      ".format(self.done,nb))
+                                  sys.stdout.flush()
+                          if trim:
+                              dsp = {tuple(data['pxl']):data for data in sp}
+                              sti = rectangle[0]
+                              stj = rectangle[1]
+                              si = rectangle[2]
+                              sj = rectangle[3]
+                              sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
+                          else:
+                              sp.sort(key=lambda data: data["pxl"])
+
+                          return sp
+
+                      spectras = []
+                      requests = list(zip(rect,polyss))
+                      while self.nb_job < len(requests):
+                          tmp_req = []
+                          for _ in range(self.nb_job):
+                              tmp_req.append(requests.pop(0))
+                          spectras.extend(pool.map(getRect,tmp_req))
+
+                      spectras.extend(pool.map(getRect,requests))
+
+
+                      for j,s in enumerate(spectras):
+                         if s is not None and len(s):
+                             annot.append(annott[j])
+                             polys.append(polyss[j])
+                             rois.append(roiss[j])
+                             spect.append(s)
+                             nimage=len(s[0]['spectra'])
+        finally:
+            pool.close()
         if self.verbose:
             sys.stdout.write("\n")
             sys.stdout.flush()

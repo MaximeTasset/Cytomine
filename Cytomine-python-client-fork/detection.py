@@ -11,7 +11,7 @@ with gzip.open('flutiste_data.im','rb') as fb:
     im,coord = pickle.load(fb)
 im = im.astype(np.uint8)
 PIL.Image.fromarray(im[:,:,:3].swapaxes(0,1)).save('original.png')
-num_image = 8
+num_image = 10
 for i in range(1,num_image+1):
     with gzip.open("flutiste_data_{}.mask".format(i),'rb') as fb:
         mask = pickle.load(fb)
