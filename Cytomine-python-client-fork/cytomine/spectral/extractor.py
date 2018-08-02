@@ -342,7 +342,17 @@ class Extractor:
 
                       return sp
 
-                  spectras = self.pool.map(getRect,zip(rect,polyss))
+                  spectras = []
+                  requests = list(zip(rect,polyss))
+                  while self.nb_job < len(requests):
+                      tmp_req = []
+                      for _ in range(self.nb_job):
+                          tmp_req.append(requests.pop(0))
+                      spectras.extend(self.pool.map(getRect,tmp_req))
+
+                  spectras.extend(self.pool.map(getRect,requests))
+
+
                   for j,s in enumerate(spectras):
                      if s is not None and len(s):
                          annot.append(annott[j])

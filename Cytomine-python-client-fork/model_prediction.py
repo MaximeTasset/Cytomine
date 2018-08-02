@@ -37,14 +37,8 @@ def main(argv):
       id_project = cj.project.id
 
       save_path = cj.parameters.save_path
-      try:
-          max_features = int(cj.parameters.forest_max_features)
-      except ValueError:
-          max_features = cj.parameters.forest_max_features
 
-      n_estimators = cj.parameters.forest_n_estimators
-      min_samples_split = cj.parameters.forest_min_samples_split
-      step = cj.parameters.step
+      n_estimators = cj.parameters.n_estimators
       slice_size = (cj.parameters.slice_size,cj.parameters.slice_size)
       n_jobs = cj.parameters.n_jobs
       use = cj.parameters.data_by_estimator
@@ -89,11 +83,11 @@ def main(argv):
 
       # Part that can be modify for the model
       def estimator():
-        return ExtraTreesClassifier(min_samples_split=min_samples_split,max_features=max_features,n_estimators=n_estimators,n_jobs=n_jobs)
+        return ExtraTreesClassifier(min_samples_split=2,max_features='auto',n_estimators=n_estimators,n_jobs=n_jobs)
 
-      # As we use the ExtraTreesClassifier, we fixe the 'n_estimators', 'n_jobs' and 'use' parameters to 1
-      sm = SpectralModel(base_estimator=estimator,n_estimators=1,step=step,slice_size=slice_size,n_jobs=1)
-      use = 1
+      # As we use the ExtraTreesClassifier, we fixe the 'n_estimators' and 'n_jobs' parameters to 1
+      sm = SpectralModel(base_estimator=estimator,n_estimators=1,slice_size=slice_size,n_jobs=1)
+
       sm.fit(X,y,use=use)
 
       #remove unpickable 'base_estimator' attribute
@@ -101,7 +95,7 @@ def main(argv):
 
       print("Saving The Model...")
       cj.job.update(statusComment = "Saving The Model...", progress = 95)
-      with open(join(save_path,"model.pickle"),"wb") as m:
+      with open(join(save_path,"model.pkl"),"wb") as m:
           pickle.dump(sm,m,pickle.HIGHEST_PROTOCOL)
 
       cj.job.update(statusComment = "Finished.", progress = 100)

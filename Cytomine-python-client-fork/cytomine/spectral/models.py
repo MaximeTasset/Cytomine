@@ -74,7 +74,6 @@ class SpectralModel:
                  base_estimator=DecisionTreeClassifier,
                  choice_function=np.argmax,
                  n_estimators=10,
-                 step=1,
                  slice_size=(3,3),
                  n_jobs=-1,
                  notALabelFlag=0):
@@ -85,7 +84,6 @@ class SpectralModel:
         self.n_estimators = n_estimators
         self.base_estimator = base_estimator
         self.choice_function = choice_function
-        self.step = min(step,1)
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
 
@@ -97,7 +95,7 @@ class SpectralModel:
         "                     - x array-like or sparse matrix, shape = (width,heigth, n_features)
         "                     - y array-like of shape = (width,heigth)
         """
-        X,y = Extractor().rois2data(zip(X,y) if not y is None else X,self.sliceSize,self.step,self.notALabelFlag)
+        X,y = Extractor().rois2data(zip(X,y) if not y is None else X,self.sliceSize,1,self.notALabelFlag)
         self.labels = np.unique(y)
         self.estimators = []
         ln = len(y)
@@ -121,7 +119,7 @@ class SpectralModel:
         "
         """
 
-        Xdata,coord = roi2data(X,self.sliceSize,self.step,splitted=True)
+        Xdata,coord = roi2data(X,self.sliceSize,1,splitted=True)
         Xdata = np.array(Xdata)
 
         ylabels = []
