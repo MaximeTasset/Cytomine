@@ -327,13 +327,16 @@ def test_depth():
     etc.max_depth = max_depth
 
 
-def test_Spaciality():
+def test_Spaciality(reduce):
     print("================================================")
-    print("Test: Spaciality Importance (tile size)")
+    print("Test: Spaciality Importance (tile size): reduce {}".format(reduce))
     print("================================================")
     best = (0,0,0)
     for i in range(1,11):
-        X,y = ext.rois2data(None,(i,i),bands=best_FI["imp"][2][:best_FI["imp"][0]])
+        if reduce:
+            X,y = ext.rois2data(None,(i,i),bands=best_FI["imp"][2][:best_FI["imp"][0]])
+        else:
+            X,y = ext.rois2data(None,(i,i),bands=None)
         indexes = list(range(X.shape[0]))
         shuffle(indexes)
         train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
@@ -363,10 +366,12 @@ def test_Spaciality():
 
 if __name__ == '__main__':
     for n_estimators in [100,1000]:
+        best_FI = {}
         print("ExtraTreesClassifier with {} estimators".format(n_estimators))
         etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
         test_comparaisonFeatureImportance()
         test_depth()
-        test_Spaciality()
+        test_Spaciality(True)
+        test_Spaciality(False)
 
     counts = test_DimensionReduction()

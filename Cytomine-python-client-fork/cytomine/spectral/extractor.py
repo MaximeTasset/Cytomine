@@ -88,7 +88,7 @@ class Extractor:
         elif not data:
             raise ValueError("No data")
 
-        f = open(filename, "wb") if not compressed else gzip.open(filename, "wb")
+        f = open(filename, "wb") if not compressed else gzip.open(filename, "wb",compresslevel=compresslevel)
         try:
             pickle.dump(data,f,pickle.HIGHEST_PROTOCOL)
         finally:
@@ -279,7 +279,6 @@ class Extractor:
                       nb_annotation_term[id] += dic[id]
                   nb_annotation += nb_ann
 
-                  #TODO modify to remove unwanted data (ie trim the rectangle for only get as few unkown pixel as possible)
                   if self.verbose:
                       rl = RLock()
                       nb = len(rect)
@@ -292,8 +291,6 @@ class Extractor:
                       if not trim:
                           requests = splitRect(rectangle,max_fetch_size[0],max_fetch_size[1])
                       else:
-                          #TODO make sure that data forms a rectangle for the rois
-                          #Note: The height are inverted...
                           rec = (rectangle[0],height-(rectangle[1]+rectangle[3]),rectangle[2],rectangle[3])
                           requests = removeUnWantedRect(rec,poly.buffer(pixel_border),max_fetch_size)
                           requests = [(r[0],height-(r[1]+r[3]),r[2],r[3]) for r in requests]
@@ -339,7 +336,7 @@ class Extractor:
                           stj = rectangle[1]
                           si = rectangle[2]
                           sj = rectangle[3]
-                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image),"fetched":False} for i,j in np.ndindex((si,sj))]
+                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
                       else:
                           sp.sort(key=lambda data: data["pxl"])
 
@@ -368,7 +365,7 @@ class Extractor:
 
             spectrum = [pixel for pixel in spect[i]]
             spectrum.sort(key=lambda spectra: tuple(spectra['pxl']))
-            image = np.array([spectra['spectra'] for spectra in spectrum])
+            image = np.array([spectra['spectra'] for spectra in spectrum],dtype=np.uint8)
             image_coord = np.array([spectra['pxl'] for spectra in spectrum])
             if trim:
                 lookat = np.array([0 if 'fetched' in spectra else 1 for spectra in spectrum])
@@ -463,11 +460,12 @@ class Extractor:
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
 
-def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None):
+def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None,dtype=np.uint8):
         """
         roi a np.array((width,height,features))
 
         """
+        roi = roi.astype(dtype)
         if not splitted:
           x_coord = []
         else:
