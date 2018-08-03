@@ -274,8 +274,6 @@ class Extractor:
                       width = image.width
                       height = image.height
                       annott,polyss,roiss,rect,dic,nb_ann = extract_roi(annotations_list,predict_terms_list,image.width,image.height,pixel_border)
-    #                  print(width,height)
-    #                  return polyss,rect
 
                       for id in dic:
                           nb_annotation_term[id] += dic[id]
@@ -353,7 +351,6 @@ class Extractor:
                           spectras.extend(pool.map(getRect,tmp_req))
 
                       spectras.extend(pool.map(getRect,requests))
-
 
                       for j,s in enumerate(spectras):
                          if s is not None and len(s):

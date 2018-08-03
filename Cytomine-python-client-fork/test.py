@@ -39,18 +39,18 @@ cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project=0
 
-n_jobs = 24
+n_jobs = 48
 n_estimators = 100
 test = .2
 validation = .1
 train = test + validation
 
 filename = "extractedData.save"
-#filename = "MaldiDemoData.save"
-#filename = "FlutisteData.save"
+filename = "MaldiDemoData.save"
+filename = "flutistev3.save"
 save_path = "./colors"
-#save_path = "./MaldiDemo"
-#save_path = "./Flutiste"
+save_path = "./MaldiDemo"
+save_path = "./Flutistev3"
 
 os.makedirs(save_path,exist_ok=True)
 ext = Extractor(filename)
@@ -332,6 +332,9 @@ def test_Spaciality(reduce):
     print("Test: Spaciality Importance (tile size): reduce {}".format(reduce))
     print("================================================")
     best = (0,0,0)
+    best_pca = (0,0,0)
+    best_pca_w = (0,0,0)
+    
     for i in range(1,11):
         if reduce:
             X,y = ext.rois2data(None,(i,i),bands=best_FI["imp"][2][:best_FI["imp"][0]])
@@ -344,24 +347,88 @@ def test_Spaciality(reduce):
         val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
         if not (len(train_SampleY) and len(test_SampleY) and len(val_SampleY)):
             break
+        
         del X,y
 
         print("train set size: {}".format(len(train_SampleY)))
         print("test set size: {}".format(len(test_SampleY)))
         print("validation set size: {}".format(len(val_SampleY)))
-
+        
         etc.fit(train_SampleX,train_SampleY)
-        del train_SampleX,train_SampleY
+        del train_SampleX
 
         score = etc.score(test_SampleX,test_SampleY)
-        del test_SampleX,test_SampleY
+        del test_SampleX
         print("Score with a slice size of {}:\t{}".format(i,score))
 
         if score >= best[1]:
             best = (i,score,etc.score(val_SampleX,val_SampleY))
-        del val_SampleX,val_SampleY
+        del val_SampleX
+        
+        X,y = ext.rois2data(None,(i,i),bands=None)
+        
+        pca_tmp = PCA().fit(X)
+        count = 0
+        for i,c in enumerate(pca_tmp.explained_variance_ratio_):
+          count += c
+          if count >= 0.97:
+            kept = i + 1
+            break
+        pcaData = pca_tmp.transform(X)
+        del pca_tmp
+        
+        train_SampleX_PCA = pcaData[indexes[int(train*len(indexes)):],:kept]
+        test_SampleX_PCA = pcaData[indexes[:int(test*len(indexes))],:kept]
+        val_SampleX_PCA = pcaData[indexes[int(test*len(indexes)):int(train*len(indexes))],:kept]
+        
+        del pcaData
+        
+        etc.fit(train_SampleX_PCA,train_SampleY)
+        del train_SampleX_PCA
+
+        score = etc.score(test_SampleX_PCA,test_SampleY)
+        del test_SampleX_PCA
+        print("PCA: Score with a slice size of {}:\t{}".format(i,score))
+
+        if score >= best_pca[1]:
+            best_pca = (i,score,etc.score(val_SampleX_PCA,val_SampleY))
+        del val_SampleX_PCA
+        
+        pca_tmp = PCA(whiten=True).fit(X)
+        count = 0
+        for i,c in enumerate(pca_tmp.explained_variance_ratio_):
+          count += c
+          if count >= 0.97:
+            kept = i + 1
+            break
+        pcaData = pca_tmp.transform(X)
+        del pca_tmp
+        
+        train_SampleX_PCA = pcaData[indexes[int(train*len(indexes)):],:kept]
+        test_SampleX_PCA = pcaData[indexes[:int(test*len(indexes))],:kept]
+        val_SampleX_PCA = pcaData[indexes[int(test*len(indexes)):int(train*len(indexes))],:kept]
+        
+        del pcaData
+        
+        etc.fit(train_SampleX_PCA,train_SampleY)
+        del train_SampleX_PCA
+
+        score = etc.score(test_SampleX_PCA,test_SampleY)
+        del test_SampleX_PCA
+        print("PCA_w: Score with a slice size of {}:\t{}".format(i,score))
+
+        if score >= best_pca_w[1]:
+            best_pca_w = (i,score,etc.score(val_SampleX_PCA,val_SampleY))
+        del val_SampleX_PCA
+        
+        
+        del train_SampleY,test_SampleY,val_SampleY
+        
+        
 
     print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
+    print("PCA: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca[0],best_pca[1],best_pca[2]))
+    print("PCA_w: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca_w[0],best_pca_w[1],best_pca_w[2]))
 
 
 if __name__ == '__main__':
