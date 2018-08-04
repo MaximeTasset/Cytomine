@@ -53,14 +53,11 @@ def main(argv):
 
         # running parameters
         SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1000).save()
-        SoftwareParameter("step", type="Number", id_software=software.id, default_value=1, index=1100).save()
         SoftwareParameter("slice_size", type="Number", id_software=software.id, default_value=3, index=1200).save()
         SoftwareParameter("data_by_estimator", type="Number", id_software=software.id, default_value=1, index=1300).save()
 
-        SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1500).save()
-        SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1600).save()
-        SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1700).save()
-        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1800).save()
+        SoftwareParameter("n_estimators", type="Number", id_software=software.id, default_value=10, index=1600).save()
+        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="./tmp", index=1800).save()
 
         print(software.id)
         SoftwareProject(software.id,id_project).save()

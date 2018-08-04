@@ -76,7 +76,7 @@ class Extractor:
             with open(filename, "rb") as f:
                 self.data = pickle.load(f)
         self._populate()
-
+        return self
 
     def writeFile(self,filename=None,data=None,compressed=True,compresslevel=4):
         if not filename and self.filename:
@@ -93,7 +93,6 @@ class Extractor:
             pickle.dump(data,f,pickle.HIGHEST_PROTOCOL)
         finally:
             f.close()
-
 
     def chi2(self, sort=False, N=0,usedata=1):
         n_sample = len(self.X)
@@ -444,7 +443,7 @@ class Extractor:
         self._populate()
 
 
-    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None):
+    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None,dtype=np.uint8):
         """
         rois a list of tuple (np.array((width,height,features)),np.array((width,height)))
         """
@@ -452,13 +451,14 @@ class Extractor:
         if rois is None:
             if hasattr(self,"rois"):
                 rois = self.rois
+                dtype = rois[0][0].dtype
                 notALabelFlag = 0
             else:
                 return
         x = []
         y = []
         for roi,labels in rois:
-            for rect,coord in roi2data(roi,sliceSize,step,flatten,bands=bands):
+            for rect,coord in roi2data(roi,sliceSize,step,flatten,bands=bands,dtype=dtype):
                 ic,jc = coord
                 if labels[ic,jc] != notALabelFlag:
                     x.append(rect)
@@ -476,7 +476,8 @@ def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None,d
         roi a np.array((width,height,features))
 
         """
-        roi = roi.astype(dtype)
+        if not roi.dtype is np.dtype(dtype):
+          roi = roi.astype(dtype)
         if not splitted:
           x_coord = []
         else:

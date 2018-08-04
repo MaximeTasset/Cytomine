@@ -12,3 +12,5 @@ Cytomine-python-client-fork/time_test.py
 *.pickle
 *.zip
 *.im
+*.mask
+*.pkl

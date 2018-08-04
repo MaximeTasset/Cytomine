@@ -65,19 +65,37 @@ except FileNotFoundError:
       ext.loadDataFromCytomine(id_project=id_project)
       print("Saving data to file for later uses")
       ext.writeFile()
-nb_feature = ext.numFeature
-print("fit_transform pca")
-pca = PCA().fit(ext.X)
-print("transform")
-X = pca.transform(ext.X)
 
-print("fit_transform pca with whiten")
-pca_w = PCA(whiten=True).fit(ext.X)
-print("transform")
-X_w = pca_w.transform(ext.X)
-
-indexes = list(range(X.shape[0]))
+indexes = list(range(ext.X.shape[0]))
 shuffle(indexes)
+
+
+nb_feature = ext.numFeature
+
+#Test, train and validation sets
+train_SampleX = ext.X[indexes[int(train*len(indexes)):]]
+
+print("fit_transform pca")
+pca = PCA().fit(train_SampleX)
+print("fit_transform pca with whiten")
+pca_w = PCA(whiten=True).fit(train_SampleX)
+
+train_SamplePCA_X = pca.transform(train_SampleX)
+train_SamplePCA_w_X = pca_w.transform(train_SampleX)
+
+train_SampleY = ext.Y[indexes[int(train*len(indexes)):]]
+
+test_SampleX = ext.X[indexes[:int(test*len(indexes))]]
+test_SamplePCA_X = pca.transform(test_SampleX)
+test_SamplePCA_w_X = pca_w.transform(test_SampleX)
+
+test_SampleY = ext.Y[indexes[:int(test*len(indexes))]]
+
+val_SampleX = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+val_SamplePCA_X = pca.transform(val_SampleX)
+val_SamplePCA_w_X = pca_w.transform(val_SampleX)
+
+val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
 
 etc = None
 
@@ -122,25 +140,6 @@ def test_comparaisonFeatureImportance():
     sum_val = chi2_val + f_c_val + imp_val
     sumv = [i for val,i in sorted([(val,i) for i,val in enumerate(sum_val)])]
     del imp_val,f_c_val,chi2_val
-
-    #Test, train and validation sets
-    test_SamplePCA_X = X[indexes[:int(test*len(indexes))]]
-    test_SamplePCA_w_X = X_w[indexes[:int(test*len(indexes))]]
-    test_SampleX = ext.X[indexes[:int(test*len(indexes))]]
-
-    test_SampleY = ext.Y[indexes[:int(test*len(indexes))]]
-
-    train_SamplePCA_X = X[indexes[int(train*len(indexes)):]]
-    train_SamplePCA_w_X = X_w[indexes[int(train*len(indexes)):]]
-    train_SampleX = ext.X[indexes[int(train*len(indexes)):]]
-
-    train_SampleY = ext.Y[indexes[int(train*len(indexes)):]]
-
-    val_SamplePCA_X = X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-    val_SamplePCA_w_X = X_w[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-    val_SampleX = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-
-    val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
 
     print("train set size: {}".format(len(train_SampleY)))
     print("test set size: {}".format(len(test_SampleY)))
@@ -260,25 +259,6 @@ def test_depth():
     print("================================================")
     max_depth = etc.max_depth
 
-    #Test, train and validation sets
-    test_SamplePCA_X = X[indexes[:int(test*len(indexes))]]
-    test_SamplePCA_w_X = X_w[indexes[:int(test*len(indexes))]]
-    test_SampleX = ext.X[indexes[:int(test*len(indexes))]]
-
-    test_SampleY = ext.Y[indexes[:int(test*len(indexes))]]
-
-    train_SamplePCA_X = X[indexes[int(train*len(indexes)):]]
-    train_SamplePCA_w_X = X_w[indexes[int(train*len(indexes)):]]
-    train_SampleX = ext.X[indexes[int(train*len(indexes)):]]
-
-    train_SampleY = ext.Y[indexes[int(train*len(indexes)):]]
-
-    val_SamplePCA_X = X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-    val_SamplePCA_w_X = X_w[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-    val_SampleX = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-
-    val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-
     depth = 100
 
     scores = []
@@ -326,6 +306,61 @@ def test_depth():
 
     etc.max_depth = max_depth
 
+def spaciality(X,y,i,indexes,old_score,name):
+    train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
+    test_SampleX,test_SampleY = X[indexes[:int(test*len(indexes))]],y[indexes[:int(test*len(indexes))]]
+    val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+
+    if not (len(train_SampleY) and len(test_SampleY) and len(val_SampleY)):
+        return True,old_score
+    del X,y
+
+    print("train set size: {}".format(len(train_SampleY)))
+    print("test set size: {}".format(len(test_SampleY)))
+    print("validation set size: {}".format(len(val_SampleY)))
+    etc.fit(train_SampleX,train_SampleY)
+    del train_SampleX
+    score = etc.score(test_SampleX,test_SampleY)
+    del test_SampleX
+    print("{}: Score with a slice size of {}:\t{}".format(name,i,score))
+
+    return False,((i,score,etc.score(val_SampleX,val_SampleY)) if score >= old_score[1] else old_score)
+
+def roi_pca(X,indexes,whiten):
+
+    a = 0.97
+
+    train_SampleX = X[indexes[int(train*len(indexes)):]]
+
+    totransform = []
+    for roi in train_SampleX:
+        for i,j in np.ndindex(roi.shape[:2]):
+            totransform.append(roi[i,j])
+
+    pca = PCA(whiten=whiten).fit(totransform)
+    count = 0
+    for i,c in enumerate(pca.explained_variance_ratio_):
+        count += c
+        if count >= a:
+            print("{}: ratio explained >= {:.2f} with {} components".format("pca_w" if whiten else "pca",a,i+1))
+            pca_kept = i+1
+            break
+    pca = PCA(n_components=pca_kept,whiten=whiten).fit(totransform)
+    totransform = []
+    for roi in X:
+        for i,j in np.ndindex(roi.shape[:2]):
+            totransform.append(roi[i,j])
+
+    it = iter(pca.transform(totransform))
+    rois_pca = []
+    for roi in X:
+        roi = np.empty((roi.shape[0],roi.shape[1],pca_kept),dtype=np.float64)
+        for i,j in np.ndindex(roi.shape[:2]):
+            roi[i,j] = it.__next__()
+            rois_pca.append(roi.flatten())
+            del roi
+
+    return rois_pca
 
 def test_Spaciality(reduce):
     print("================================================")
@@ -334,7 +369,8 @@ def test_Spaciality(reduce):
     best = (0,0,0)
     best_pca = (0,0,0)
     best_pca_w = (0,0,0)
-    
+
+
     for i in range(1,11):
         if reduce:
             X,y = ext.rois2data(None,(i,i),bands=best_FI["imp"][2][:best_FI["imp"][0]])
@@ -342,89 +378,18 @@ def test_Spaciality(reduce):
             X,y = ext.rois2data(None,(i,i),bands=None)
         indexes = list(range(X.shape[0]))
         shuffle(indexes)
-        train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
-        test_SampleX,test_SampleY = X[indexes[:int(test*len(indexes))]],y[indexes[:int(test*len(indexes))]]
-        val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-        if not (len(train_SampleY) and len(test_SampleY) and len(val_SampleY)):
-            break
-        
+        stop, best = spaciality(X,y,i,indexes,best,"raw")
+        if stop:
+          break
         del X,y
 
-        print("train set size: {}".format(len(train_SampleY)))
-        print("test set size: {}".format(len(test_SampleY)))
-        print("validation set size: {}".format(len(val_SampleY)))
-        
-        etc.fit(train_SampleX,train_SampleY)
-        del train_SampleX
-
-        score = etc.score(test_SampleX,test_SampleY)
-        del test_SampleX
-        print("Score with a slice size of {}:\t{}".format(i,score))
-
-        if score >= best[1]:
-            best = (i,score,etc.score(val_SampleX,val_SampleY))
-        del val_SampleX
-        
-        X,y = ext.rois2data(None,(i,i),bands=None)
-        
-        pca_tmp = PCA().fit(X)
-        count = 0
-        for i,c in enumerate(pca_tmp.explained_variance_ratio_):
-          count += c
-          if count >= 0.97:
-            kept = i + 1
-            break
-        pcaData = pca_tmp.transform(X)
-        del pca_tmp
-        
-        train_SampleX_PCA = pcaData[indexes[int(train*len(indexes)):],:kept]
-        test_SampleX_PCA = pcaData[indexes[:int(test*len(indexes))],:kept]
-        val_SampleX_PCA = pcaData[indexes[int(test*len(indexes)):int(train*len(indexes))],:kept]
-        
-        del pcaData
-        
-        etc.fit(train_SampleX_PCA,train_SampleY)
-        del train_SampleX_PCA
-
-        score = etc.score(test_SampleX_PCA,test_SampleY)
-        del test_SampleX_PCA
-        print("PCA: Score with a slice size of {}:\t{}".format(i,score))
-
-        if score >= best_pca[1]:
-            best_pca = (i,score,etc.score(val_SampleX_PCA,val_SampleY))
-        del val_SampleX_PCA
-        
-        pca_tmp = PCA(whiten=True).fit(X)
-        count = 0
-        for i,c in enumerate(pca_tmp.explained_variance_ratio_):
-          count += c
-          if count >= 0.97:
-            kept = i + 1
-            break
-        pcaData = pca_tmp.transform(X)
-        del pca_tmp
-        
-        train_SampleX_PCA = pcaData[indexes[int(train*len(indexes)):],:kept]
-        test_SampleX_PCA = pcaData[indexes[:int(test*len(indexes))],:kept]
-        val_SampleX_PCA = pcaData[indexes[int(test*len(indexes)):int(train*len(indexes))],:kept]
-        
-        del pcaData
-        
-        etc.fit(train_SampleX_PCA,train_SampleY)
-        del train_SampleX_PCA
-
-        score = etc.score(test_SampleX_PCA,test_SampleY)
-        del test_SampleX_PCA
-        print("PCA_w: Score with a slice size of {}:\t{}".format(i,score))
-
-        if score >= best_pca_w[1]:
-            best_pca_w = (i,score,etc.score(val_SampleX_PCA,val_SampleY))
-        del val_SampleX_PCA
-        
-        
-        del train_SampleY,test_SampleY,val_SampleY
-        
-        
+        X,y = ext.rois2data(None,(i,i),flatten=False,bands=None)
+        stop, best_pca = spaciality(roi_pca(X,indexes,False),y,i,indexes,best_pca,"pca")
+        if stop:
+          break
+        stop, best_pca_w = spaciality(roi_pca(X,indexes,True),y,i,indexes,best_pca_w,"pca_w")
+        if stop:
+          break
 
     print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
     print("PCA: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca[0],best_pca[1],best_pca[2]))

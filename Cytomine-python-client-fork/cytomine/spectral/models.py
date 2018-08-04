@@ -72,6 +72,7 @@ class KMeanClustering:
 class SpectralModel:
     def __init__(self,
                  base_estimator=DecisionTreeClassifier,
+                 base_estimator_param=None,
                  choice_function=np.argmax,
                  n_estimators=10,
                  slice_size=(3,3),
@@ -83,6 +84,7 @@ class SpectralModel:
         self.n_jobs = n_jobs if n_jobs > 0 else max(psutil.cpu_count() + n_jobs + 1,1)
         self.n_estimators = n_estimators
         self.base_estimator = base_estimator
+        self.base_estimator_param = base_estimator_param
         self.choice_function = choice_function
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
@@ -106,7 +108,9 @@ class SpectralModel:
             for i in range(self.n_estimators + 1):
                 np.random.shuffle(indexes[int(i%self.n_jobs)])
                 if i and i % self.n_jobs == 0 or i == self.n_estimators:
-                    self.estimators.extend(pool.map(fit,[(self.base_estimator,[X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
+                    self.estimators.extend(pool.map(fit,[(self.base_estimator,
+                                                          self.base_estimator_param,
+                                                          [X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
                     st = i
         finally:
             pool.close()
@@ -148,9 +152,12 @@ class SpectralModel:
 
 
 def fit(arg):
-    estimator,arg = arg
-    estimator = estimator()
-    estimator.fit(*arg)
+    estimator,arg,fit_arg = arg
+    if arg is None:
+      estimator = estimator()
+    else:
+      estimator = estimator(**arg)
+    estimator.fit(*fit_arg)
     return estimator
 
 def predict(arg):
