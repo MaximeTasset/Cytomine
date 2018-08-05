@@ -357,22 +357,36 @@ def roi_pca(X,indexes,whiten):
             pca_kept = i+1
             break
     pca = PCA(n_components=pca_kept,whiten=whiten).fit(totransform)
+    already = {}
     totransform = []
-    for roi in X:
+    for r,roi in enumerate(X):
         for i,j in np.ndindex(roi.shape[:2]):
-            totransform.append(roi[i,j])
+            key = tuple(roi[i,j])
+            try:
+                index,coords = already[key]
+                coords.append((r,i,j))
+                already[key] = index,coords
+            except KeyError:
+                already[key] = len(totransform),[(r,i,j)]
+                totransform.append(roi[i,j])
 
-    it = iter(pca.transform(totransform).astype(np.float32))
+    inin = {}
+    for key,coords in already.values():
+        for coord in coords:
+            inin[coord] = key
+    del already
+    it = pca.transform(totransform).astype(np.float32)
+
     rois_pca = []
-    for roi in X:
+    for r,roi in enumerate(X):
         roi = np.empty((roi.shape[0],roi.shape[1],pca_kept),dtype=np.float32)
         for i,j in np.ndindex(roi.shape[:2]):
-            roi[i,j] = it.__next__()
+            roi[i,j] = it[inin[r,i,j]]
         rois_pca.append(roi.flatten())
         del roi
 
     return np.array(rois_pca,dtype=np.uint8)
-    np.concatenate
+
 def test_Spaciality(reduce):
     print("================================================")
     print("Test: Spaciality Importance (tile size): reduce {}".format(reduce))
