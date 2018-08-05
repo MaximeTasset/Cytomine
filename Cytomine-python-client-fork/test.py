@@ -44,13 +44,17 @@ n_estimators = 100
 test = .2
 validation = .1
 train = test + validation
+fileid = 10
 
-filename = "extractedData.save"
-filename = "MaldiDemoData.save"
-filename = "flutistev3.save"
-save_path = "./colors"
-save_path = "./MaldiDemo"
-save_path = "./Flutistev3"
+if fileid == 1:
+    filename = "extractedData.save"
+    save_path = "./colors"
+elif fileid == 10:
+    filename = "MaldiDemoData.save"
+    save_path = "./MaldiDemo"
+else:
+    filename = "flutistev3.save"
+    save_path = "./Flutistev3"
 
 os.makedirs(save_path,exist_ok=True)
 ext = Extractor(filename)
@@ -65,6 +69,7 @@ except FileNotFoundError:
       ext.loadDataFromCytomine(id_project=id_project)
       print("Saving data to file for later uses")
       ext.writeFile()
+del ext.data,ext.unknown_X,ext.unknown_coord,ext.data_coord
 
 indexes = list(range(ext.X.shape[0]))
 shuffle(indexes)
@@ -73,7 +78,7 @@ shuffle(indexes)
 nb_feature = ext.numFeature
 
 #Test, train and validation sets
-train_SampleX = ext.X[indexes[int(train*len(indexes)):]]
+train_SampleX = ext.X[indexes[int(train*len(indexes)):]].astype(np.uint8)
 
 print("fit_transform pca")
 pca = PCA().fit(train_SampleX)
@@ -85,18 +90,20 @@ train_SamplePCA_w_X = pca_w.transform(train_SampleX)
 
 train_SampleY = ext.Y[indexes[int(train*len(indexes)):]]
 
-test_SampleX = ext.X[indexes[:int(test*len(indexes))]]
+test_SampleX = ext.X[indexes[:int(test*len(indexes))]].astype(np.uint8)
 test_SamplePCA_X = pca.transform(test_SampleX)
 test_SamplePCA_w_X = pca_w.transform(test_SampleX)
 
 test_SampleY = ext.Y[indexes[:int(test*len(indexes))]]
 
-val_SampleX = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]]
+val_SampleX = ext.X[indexes[int(test*len(indexes)):int(train*len(indexes))]].astype(np.uint8)
 val_SamplePCA_X = pca.transform(val_SampleX)
 val_SamplePCA_w_X = pca_w.transform(val_SampleX)
 
 val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
 
+
+del ext.X,ext.Y
 etc = None
 
 best_FI = {}
@@ -109,15 +116,15 @@ def test_comparaisonFeatureImportance():
     print("Test: Comparaison Of Feature Importance Measure")
     print("================================================")
     print("getting feature importances from ETC")
-    imp_val = ext.features_ETC(n_estimators=n_estimators)
+    imp_val = ext.features_ETC(n_estimators=n_estimators,data=(train_SampleX,train_SampleY))
     imp = [i for imp,i in sorted(imp_val)]
     imp.reverse()
     print("getting feature importances from f_classif")
-    f_c_val = ext.f_classif()
+    f_c_val = ext.f_classif(data=(train_SampleX,train_SampleY))
     f_c = [i for imp,i in sorted(f_c_val)]
     f_c.reverse()
     print("getting feature importances from chi2")
-    chi2_val = ext.chi2()
+    chi2_val = ext.chi2(data=(train_SampleX,train_SampleY))
     chi2 = [i for imp,i in sorted(chi2_val)]
     chi2.reverse()
 
@@ -307,10 +314,12 @@ def test_depth():
     etc.max_depth = max_depth
 
 def spaciality(X,y,i,indexes,old_score,name):
+    X = np.asarray(X)
+    X[np.nonzero(np.isfinite(X) == False)] = 0
+    y = np.asarray(y)
     train_SampleX,train_SampleY = X[indexes[int(train*len(indexes)):]],y[indexes[int(train*len(indexes)):]]
     test_SampleX,test_SampleY = X[indexes[:int(test*len(indexes))]],y[indexes[:int(test*len(indexes))]]
     val_SampleX,val_SampleY = X[indexes[int(test*len(indexes)):int(train*len(indexes))]],y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
-
     if not (len(train_SampleY) and len(test_SampleY) and len(val_SampleY)):
         return True,old_score
     del X,y
@@ -318,10 +327,12 @@ def spaciality(X,y,i,indexes,old_score,name):
     print("train set size: {}".format(len(train_SampleY)))
     print("test set size: {}".format(len(test_SampleY)))
     print("validation set size: {}".format(len(val_SampleY)))
+
     etc.fit(train_SampleX,train_SampleY)
-    del train_SampleX
+
+    del train_SampleX,train_SampleY
     score = etc.score(test_SampleX,test_SampleY)
-    del test_SampleX
+    del test_SampleX,test_SampleY
     print("{}: Score with a slice size of {}:\t{}".format(name,i,score))
 
     return False,((i,score,etc.score(val_SampleX,val_SampleY)) if score >= old_score[1] else old_score)
@@ -329,7 +340,7 @@ def spaciality(X,y,i,indexes,old_score,name):
 def roi_pca(X,indexes,whiten):
 
     a = 0.97
-
+    X = np.asarray(X,dtype=np.uint8)
     train_SampleX = X[indexes[int(train*len(indexes)):]]
 
     totransform = []
@@ -351,17 +362,17 @@ def roi_pca(X,indexes,whiten):
         for i,j in np.ndindex(roi.shape[:2]):
             totransform.append(roi[i,j])
 
-    it = iter(pca.transform(totransform))
+    it = iter(pca.transform(totransform).astype(np.float32))
     rois_pca = []
     for roi in X:
-        roi = np.empty((roi.shape[0],roi.shape[1],pca_kept),dtype=np.float64)
+        roi = np.empty((roi.shape[0],roi.shape[1],pca_kept),dtype=np.float32)
         for i,j in np.ndindex(roi.shape[:2]):
             roi[i,j] = it.__next__()
-            rois_pca.append(roi.flatten())
-            del roi
+        rois_pca.append(roi.flatten())
+        del roi
 
-    return rois_pca
-
+    return np.array(rois_pca,dtype=np.uint8)
+    np.concatenate
 def test_Spaciality(reduce):
     print("================================================")
     print("Test: Spaciality Importance (tile size): reduce {}".format(reduce))

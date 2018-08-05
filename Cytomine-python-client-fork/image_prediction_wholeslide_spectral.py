@@ -42,7 +42,7 @@ import numpy as np
 from cytomine.utilities.reader import Bounds, CytomineSpectralReader
 from cytomine.spectral import coordonatesToPolygons,polygonToAnnotation
 
-from cytomine.models import Annotation,TermCollection
+from cytomine.models import Annotation,TermCollection,ImageGroupCollection
 
 from multiprocessing import Pool
 
@@ -55,7 +55,7 @@ def main(argv):
 
     print("Main function")
     with CytomineJob.from_cli(argv,verbose=logging.WARNING) as cj:
-      id_project = cj.project.i
+      id_project = cj.project.id
 
 
       #Initialization
@@ -90,11 +90,24 @@ def main(argv):
 
       #Reading parameters
       id_imagegroup= cj.parameters.cytomine_imagegroup
-      tile_size = cj.parameters.cytomine_tile_size
+      if id_imagegroup != '':
+          if not type(id_imagegroup) is int:
+              id_imagegroup = json.loads(id_imagegroup)
+              if type(terms_name) == dict:
+                  id_imagegroup = id_imagegroup["id"]
+              else:
+                  id_imagegroup = int(id_imagegroup)
+      else:
+        id_imagegroup = ImageGroupCollection({"project":id_project}).fetch()[0].id
+
+
+
+
       if hasattr(classifier,"sliceSize"):
           classif_slize = max(classifier.sliceSize)
       else:
           classif_slize = 0
+      tile_size = max(cj.parameters.cytomine_tile_size,classif_slize)
 
       overlap = max(cj.parameters.cytomine_overlap,classif_slize-1)
 

@@ -66,7 +66,7 @@ def main(argv):
 
       cj.job.update(statusComment = "Run...")
 
-      ext = Extractor()
+      ext = Extractor(nb_job=n_jobs)
       cj.job.update(statusComment = "Fetching data...", progress = 5)
 
 

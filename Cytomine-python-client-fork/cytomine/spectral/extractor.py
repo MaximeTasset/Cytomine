@@ -94,11 +94,16 @@ class Extractor:
         finally:
             f.close()
 
-    def chi2(self, sort=False, N=0,usedata=1):
-        n_sample = len(self.X)
+    def chi2(self, sort=False, N=0,usedata=1,data=None):
+        if data is None:
+            n_sample = self.numData
+            data = self.X,self.Y
+        else:
+            n_sample = len(data[1])
+
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        ch,_ = chi2(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
+        ch,_ = chi2(data[0][ind[:int(usedata*n_sample)]],data[1][ind[:int(usedata*n_sample)]])
         if not N:
             N = len(ch)
 
@@ -107,11 +112,16 @@ class Extractor:
         else:
           return [(ch[i],i) for i in range(len(ch))]
 
-    def f_classif(self, sort=False, N=0,usedata=1):
-        n_sample = self.numData
+    def f_classif(self, sort=False, N=0,usedata=1,data=None):
+        if data is None:
+            n_sample = self.numData
+            data = self.X,self.Y
+        else:
+            n_sample = len(data[1])
+
         ind = list(range(n_sample))
         np.random.shuffle(ind)
-        f,_ = f_classif(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
+        f,_ = f_classif(data[0][ind[:int(usedata*n_sample)]],data[1][ind[:int(usedata*n_sample)]])
         if not N:
             N = len(f)
 
@@ -120,15 +130,20 @@ class Extractor:
         else:
           return [(f[i],i) for i in range(len(f))]
 
-    def features_ETC(self, sort=False, N=0,n_estimators=10,max_features='auto',min_samples_split=2,usedata=1):
-        n_sample = self.numData
+    def features_ETC(self, sort=False, N=0,n_estimators=10,max_features='auto',min_samples_split=2,usedata=1,data=None):
+        if data is None:
+            n_sample = self.numData
+            data = self.X,self.Y
+        else:
+            n_sample = len(data[1])
+
         ind = list(range(n_sample))
         np.random.shuffle(ind)
         if not isinstance(max_features, six.string_types) and max_features is not None:
             max_features = max(1,min(max_features,int(self.X.shape[1])))
         etc = ETC(n_estimators=n_estimators,max_features=max_features,
                   min_samples_split=min_samples_split,n_jobs=-1)
-        etc.fit(self.X[ind[:int(usedata*n_sample)]],self.Y[ind[:int(usedata*n_sample)]])
+        etc.fit(data[0][ind[:int(usedata*n_sample)]],data[1][ind[:int(usedata*n_sample)]])
         f = etc.feature_importances_
         if not N:
             N = len(f)
@@ -303,9 +318,9 @@ class Extractor:
                               (w,h,sizew,sizeh) = requests.pop()
                               try:
                                 if sp is None:
-                                    sp = im.rectangle_all(w,h,sizew,sizeh)
+                                    sp = [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=np.uint8)} for p in im.rectangle_all(w,h,sizew,sizeh)]
                                 else:
-                                    sp += im.rectangle_all(w,h,sizew,sizeh)
+                                    sp += [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=np.uint8)} for p in im.rectangle_all(w,h,sizew,sizeh)]
                               except socket.error :
                                 print(socket.error)
                                 time.sleep(5)
@@ -383,8 +398,10 @@ class Extractor:
 
             image = np.expand_dims(image,axis=1)
             image = image.reshape((rois[i][2],rois[i][3], nimage))
-            image = image.astype(np.uint8)
-            roi = [image.copy() for _ in range(len(annot[i].term))]
+            if len(annot[i].term) == 1:
+                roi = [image]
+            else:
+                roi = [image.copy() for _ in range(len(annot[i].term))]
             del image
             roil = [np.zeros((rois[i][2],rois[i][3]),dtype=int) for _ in range(len(annot[i].term))]
 
@@ -441,6 +458,7 @@ class Extractor:
         self.data["numPixelTerm"] = {i:len(self.data["Y"][self.data["Y"] == i]) for i in nb_annotation_term}
 
         self._populate()
+        return self
 
 
     def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None,dtype=np.uint8):

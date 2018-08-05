@@ -43,11 +43,6 @@ def main(argv):
                             service_name="pyxitSuggestedTermJobService",
                             result_name="ValidateAnnotation").save()
 
-#        SoftwareParameter("cytomine_id_software", type="Number", id_software=software.id,
-#                          index=100, set_by_server=True, required=True).save()
-#        SoftwareParameter("cytomine_id_project", type="Number", id_software=software.id,
-#                          index=100, set_by_server=True, required=True).save()
-
         # filtering annotations
         SoftwareParameter("cytomine_imagegroup", type="Domain", id_software=software.id, index=800, default_value='',
                           uri="/api/project/$currentProject$/imagegroup.json",uri_sort_attribut="id",uri_print_attribut="id").save()
@@ -63,11 +58,11 @@ def main(argv):
 
         # running parameters
         SoftwareParameter("n_jobs", type="Number", id_software=software.id, default_value=1, index=1500).save()
-        SoftwareParameter("n_jobs_reader", type="Number", id_software=software.id, default_value=10, index=1600).save()
+        SoftwareParameter("n_jobs_reader", type="Number", id_software=software.id, default_value=1, index=1600).save()
 
         SoftwareParameter("model_path", type="String", id_software=software.id, default_value="./tmp", index=1700).save()
-        SoftwareParameter("model_name", type="String", id_software=software.id, default_value="model.pickle", index=1800).save()
-        SoftwareParameter("model_nb_jobs", type="Number", id_software=software.id, default_value=4, index=1900).save()
+        SoftwareParameter("model_name", type="String", id_software=software.id, default_value="model.pkl", index=1800).save()
+        SoftwareParameter("model_nb_jobs", type="Number", id_software=software.id, default_value=1, index=1900).save()
 
         SoftwareParameter("cytomine_overlap", type="Number", id_software=software.id, default_value=10, index=2000).save()
 

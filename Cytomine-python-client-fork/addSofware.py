@@ -61,7 +61,7 @@ def main(argv):
         SoftwareParameter("forest_max_features", type="String", id_software=software.id, default_value="auto", index=1200).save()
         SoftwareParameter("forest_n_estimators", type="Number", id_software=software.id, default_value=10, index=1300).save()
         SoftwareParameter("forest_min_samples_split", type="Number", id_software=software.id, default_value=2, index=1400).save()
-        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="/tmp", index=1600).save()
+        SoftwareParameter("save_path", type="String", id_software=software.id, default_value="./tmp", index=1600).save()
         SoftwareParameter("save_as_xlsx", type="Number", id_software=software.id, default_value=0, index=1800).save()
 
         print(software.id)

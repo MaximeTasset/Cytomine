@@ -140,7 +140,7 @@ from skimage.filters import roberts, sobel, scharr, prewitt
 from skimage.morphology import erosion,dilation,square
 import numpy as np
 
-def super_filter(im):
+def super_filter(im,th):
 
     if len(im.shape) == 3:
         gim =  0.2989 * im[:,:,0] + 0.5870 * im[:,:,1] + 0.1140 * im[:,:,2]
@@ -155,7 +155,7 @@ def super_filter(im):
         masks.append(mask.astype(np.uint8))
 
     mask = np.zeros_like(masks[0],dtype=np.float64)
-    th = 70
+
     for m in masks:
         for v,l,u in [(0,0,th),(255,th,256)]:
             x,y = np.nonzero(m >= l)
@@ -169,14 +169,14 @@ def super_filter(im):
 
     return erosion(dilation(umask,square(4)),square(5))
 
-def apply_super_filter(spectral_image,th_vote):
-  supermask = [super_filter(spectral_image[:,:,i]) for i in range(spectral_image.shape[2])]
+def apply_super_filter(spectral_image,th_vote,th_filter):
+  supermask = [super_filter(spectral_image[:,:,i],th_filter) for i in range(spectral_image.shape[2])]
   supermask = np.array(supermask)
   superfilter = np.sum(supermask>=128,axis=0)
   superfilter = superfilter >= th_vote
   return superfilter
 
-#  superfilt = apply_super_filter(im,510)
+#  superfilt = apply_super_filter(im,510,70)
 #  x,y = np.nonzero(superfilt)
 #  imm = im[:,:,:3].copy()
 #  imm[x,y] = (255,0,0)

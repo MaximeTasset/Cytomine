@@ -88,14 +88,17 @@ class SpectralModel:
         self.choice_function = choice_function
         self.sliceSize = slice_size
         self.notALabelFlag = notALabelFlag
+    def set_N_Jobs(self,n_jobs):
+        if n_jobs:
+            self.n_jobs = n_jobs if n_jobs > 0 else max(psutil.cpu_count() + n_jobs + 1,1)
 
     def fit(self,X,y=None,use=0.8):
         """
-        " X: a list of n array-like or sparse matrix, shape = (width,heigth, n_features) Training instances to labeled clusters.
-        " y: a list of n array-like of shape = (width,heigth) The target values (class labels).
-        " Note: if y is None, then X is a list of tuple (x,y) with
-        "                     - x array-like or sparse matrix, shape = (width,heigth, n_features)
-        "                     - y array-like of shape = (width,heigth)
+        " X: a list of n array-like or sparse matrix, shape = (width,height, n_features) Training instances to labeled clusters.
+        " y: a list of n array-like of shape = (width,height) The target values (class labels).
+        " Note: if y is None, then X must be a list of tuple (x,y) with
+        "                     - x array-like or sparse matrix, shape = (width,height, n_features)
+        "                     - y array-like of shape = (width,height)
         """
         X,y = Extractor().rois2data(zip(X,y) if not y is None else X,self.sliceSize,1,self.notALabelFlag)
         self.labels = np.unique(y)
@@ -119,7 +122,7 @@ class SpectralModel:
 
     def predict(self,X):
         """
-        " X: array-like or sparse matrix, shape=(width,heigth, n_features)
+        " X: array-like or sparse matrix, shape=(width,height, n_features)
         "
         """
 
