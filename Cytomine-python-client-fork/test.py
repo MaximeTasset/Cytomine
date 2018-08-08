@@ -275,24 +275,32 @@ def test_depth():
     best = (0,0,0)
     best_pca = (0,0,0)
     best_pca_w = (0,0,0)
+#   pour avoir la vrai profondeur => max([et.tree_.max_depth for et in etc.estimators_])
+
+    real_depth = []
+    real_depth_pca = []
+    real_depth_pca_w = []
 
     for i in range(depth):
         etc.max_depth = i + 1
 
         etc.fit(train_SampleX,train_SampleY)
         score = etc.score(test_SampleX,test_SampleY)
+        real_depth.append(max([et.tree_.max_depth for et in etc.estimators_]))
         scores.append(score)
         if score >= best[1]:
           best = (i+1,score,etc.score(val_SampleX,val_SampleY))
 
         etc.fit(train_SamplePCA_X,train_SampleY)
         score = etc.score(test_SamplePCA_X,test_SampleY)
+        real_depth_pca.append(max([et.tree_.max_depth for et in etc.estimators_]))
         scores_pca.append(score)
         if score >= best_pca[1]:
           best_pca = (i+1,score,etc.score(val_SamplePCA_X,val_SampleY))
 
         etc.fit(train_SamplePCA_w_X,train_SampleY)
         score = etc.score(test_SamplePCA_w_X,test_SampleY)
+        real_depth_pca_w.append(max([et.tree_.max_depth for et in etc.estimators_]))
         scores_pca_w.append(score)
         if score >= best_pca_w[1]:
           best_pca_w = (i+1,score,etc.score(val_SamplePCA_w_X,val_SampleY))
@@ -304,6 +312,14 @@ def test_depth():
     plt.xlabel("Max Depth")
     plt.legend()
     plt.savefig(os.path.join(save_path,"score_max_depth_{}.png".format(n_estimators)))
+    plt.close()
+    plt.plot(range(1,depth+1),real_depth,label="raw data")
+    plt.plot(range(1,depth+1),real_depth_pca,label="PCA")
+    plt.plot(range(1,depth+1),real_depth_pca_w,label="PCA whiten")
+    plt.ylabel("Real Max Depth")
+    plt.xlabel("Max Depth")
+    plt.legend()
+    plt.savefig(os.path.join(save_path,"real_max_depth_{}.png".format(n_estimators)))
     plt.close()
     print("Raw: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best))
     print("PCA: Best score with a max depth of {} (test set {}):\t{} on the validation set".format(*best_pca))
@@ -420,15 +436,52 @@ def test_Spaciality(reduce):
     print("PCA: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca[0],best_pca[1],best_pca[2]))
     print("PCA_w: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca_w[0],best_pca_w[1],best_pca_w[2]))
 
+def test_max_feature():
+    print("================================================")
+    print("Test: feature selection (etc max_feature)")
+    print("================================================")
+    last = etc.max_features
+
+    best = (0,0,0)
+    best_pca = (0,0,0)
+    best_pca_w = (0,0,0)
+    for name,max_features in [('totally randomized trees',1),("sqrt",int(np.sqrt(ext.numFeature))),("middle",int(ext.numFeature/2)),("all",ext.numFeature),("log2",int(np.log2(ext.numFeature)))]:
+        etc.max_features = max_features
+
+        etc.fit(train_SampleX,train_SampleY)
+        score = etc.score(test_SampleX,test_SampleY)
+        print("Raw: score with max features {} on test set {}".format(name,score))
+        if score >= best[1]:
+          best = (name,score,etc.score(val_SampleX,val_SampleY))
+
+        etc.fit(train_SamplePCA_X,train_SampleY)
+        score = etc.score(test_SamplePCA_X,test_SampleY)
+        print("PCA: score with max features {} on test set {}".format(name,score))
+        if score >= best_pca[1]:
+          best_pca = (name,score,etc.score(val_SamplePCA_X,val_SampleY))
+
+        etc.fit(train_SamplePCA_w_X,train_SampleY)
+        score = etc.score(test_SamplePCA_w_X,test_SampleY)
+        print("PCA with whiten: score with max features {} on test set {}".format(name,score))
+        if score >= best_pca_w[1]:
+          best_pca_w = (name,score,etc.score(val_SamplePCA_w_X,val_SampleY))
+
+    print("Raw: Best score with max features {} (test set {}):\t{} on the validation set".format(*best))
+    print("PCA: Best score with max features {} (test set {}):\t{} on the validation set".format(*best_pca))
+    print("PCA with whiten: Best score with max features {} (test set {}):\t{} on the validation set".format(*best_pca_w))
+
+
+    etc.max_features = last
 
 if __name__ == '__main__':
     for n_estimators in [100,1000]:
         best_FI = {}
         print("ExtraTreesClassifier with {} estimators".format(n_estimators))
         etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
-        test_comparaisonFeatureImportance()
+#        test_comparaisonFeatureImportance()
         test_depth()
-        test_Spaciality(True)
-        test_Spaciality(False)
+#        test_Spaciality(True)
+#        test_Spaciality(False)
+#        test_max_feature()
 
     counts = test_DimensionReduction()

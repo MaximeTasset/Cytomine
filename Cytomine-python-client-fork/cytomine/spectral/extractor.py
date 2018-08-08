@@ -62,37 +62,44 @@ class Extractor:
             for name in self.data:
                 setattr(self,name,self.data[name])
 
+
+    def read(filename=None):
+
+        try:
+            with gzip.open(filename,'rb') as f:
+                data = pickle.load(f)
+        except OSError:
+            with open(filename, "rb") as f:
+                data = pickle.load(f)
+        return data
+    classmethod(read)
+
     def readFile(self,filename=None):
 
         if not filename and self.filename:
              filename = self.filename
         elif not filename:
             raise ValueError("No filename given")
+        self.data = Extractor.read(filename)
 
-        try:
-            with gzip.open(filename,'rb') as f:
-                self.data = pickle.load(f)
-        except OSError:
-            with open(filename, "rb") as f:
-                self.data = pickle.load(f)
         self._populate()
         return self
 
-    def writeFile(self,filename=None,data=None,compressed=True,compresslevel=4):
-        if not filename and self.filename:
-             filename = self.filename
-        elif not filename:
-            raise ValueError("No filename")
-        if not data and self.data:
-             data = self.data
-        elif not data:
-            raise ValueError("No data")
-
+    def write(filename,data,compressed=True,compresslevel=4):
         f = open(filename, "wb") if not compressed else gzip.open(filename, "wb",compresslevel=compresslevel)
         try:
             pickle.dump(data,f,pickle.HIGHEST_PROTOCOL)
         finally:
             f.close()
+    classmethod(write)
+
+    def writeFile(self,filename=None,compressed=True,compresslevel=4):
+        if not filename and self.filename:
+             filename = self.filename
+        elif not filename:
+            raise ValueError("No filename")
+
+        Extractor.write(filename,self.data,compressed,compresslevel)
 
     def chi2(self, sort=False, N=0,usedata=1,data=None):
         if data is None:

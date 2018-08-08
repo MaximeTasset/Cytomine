@@ -81,7 +81,7 @@ class SpectralModel:
         """
         " notALabelFlag, the value in y which does not correspond to a label (ie unlabeled coordinate)
         """
-        self.n_jobs = n_jobs if n_jobs > 0 else max(psutil.cpu_count() + n_jobs + 1,1)
+        self.n_jobs = n_jobs if n_jobs > 0 else max(psutil.cpu_count() + n_jobs + 1,1) if n_jobs < 0 else 0
         self.n_estimators = n_estimators
         self.base_estimator = base_estimator
         self.base_estimator_param = base_estimator_param
@@ -104,19 +104,27 @@ class SpectralModel:
         self.labels = np.unique(y)
         self.estimators = []
         ln = len(y)
-        indexes = [list(range(ln)) for i in range(self.n_jobs)]
-        pool = ThreadPool(self.n_jobs)
-        st = 0
-        try:
-            for i in range(self.n_estimators + 1):
-                np.random.shuffle(indexes[int(i%self.n_jobs)])
-                if i and i % self.n_jobs == 0 or i == self.n_estimators:
-                    self.estimators.extend(pool.map(fit,[(self.base_estimator,
-                                                          self.base_estimator_param,
-                                                          [X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
-                    st = i
-        finally:
-            pool.close()
+
+        if self.n_jobs > 1:
+            indexes = [list(range(ln)) for i in range(self.n_jobs)]
+            pool = ThreadPool(self.n_jobs)
+            st = 0
+            try:
+                for i in range(self.n_estimators + 1):
+                    np.random.shuffle(indexes[int(i%self.n_jobs)])
+                    if i and i % self.n_jobs == 0 or i == self.n_estimators:
+                        self.estimators.extend(pool.map(fit,[(self.base_estimator,
+                                                              self.base_estimator_param,
+                                                              [X[indexes[j][:int(use*ln)],:],y[indexes[j][:int(use*ln)]]]) for j in range(i-st)]))
+                        st = i
+            finally:
+                pool.close()
+        else:
+            indexes = list(range(ln))
+            for i in range(self.n_estimators):
+                np.random.shuffle(indexes)
+                self.estimators.append(self.base_estimator(**self.base_estimator_param).fit(X[indexes[:int(use*ln)],:],y[indexes[:int(use*ln)]]))
+
 
         return self
 
@@ -130,15 +138,20 @@ class SpectralModel:
         Xdata = np.array(Xdata)
 
         ylabels = []
-        pool = ThreadPool(self.n_jobs)
-        st = 0
-        try:
-            for i in range(self.n_estimators):
-                if i and i % self.n_jobs == 0 or i == self.n_estimators-1:
-                    ylabels.extend(pool.map(predict,[(self.estimators[j],Xdata) for j in range(st,i+1)]))
-                    st = i
-        finally:
-            pool.close()
+        if self.n_jobs > 1:
+            pool = ThreadPool(self.n_jobs)
+            st = 0
+            try:
+                for i in range(self.n_estimators):
+                    if i and i % self.n_jobs == 0 or i == self.n_estimators-1:
+                        ylabels.extend(pool.map(predict,[(self.estimators[j],Xdata) for j in range(st,i+1)]))
+                        st = i
+            finally:
+                pool.close()
+
+        else:
+            for est in self.estimators:
+                ylabels.append(est.predict(Xdata))
 
         ylabels = zip(*ylabels)
 
