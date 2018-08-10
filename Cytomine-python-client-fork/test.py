@@ -32,7 +32,7 @@ plt.switch_backend("agg")
 import numpy as np
 import os
 #import sys
-#import pickle
+import pickle,gzip
 
 cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
@@ -53,11 +53,11 @@ elif fileid == 10:
     filename = "MaldiDemoData.save"
     save_path = "./MaldiDemo"
 else:
-    filename = "flutistev3.save"
-    save_path = "./Flutistev3"
+    filename = "flutistev4.save"
+    save_path = "./Flutistev4"
 
 os.makedirs(save_path,exist_ok=True)
-ext = Extractor(filename)
+ext = Extractor(filename,nb_job=n_jobs)
 try:
     print("load data from file {}".format(filename))
     ext.readFile()
@@ -102,6 +102,9 @@ val_SamplePCA_w_X = pca_w.transform(val_SampleX)
 
 val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
 
+ext.saveFeatureSelectionInCSV(os.path.join(save_path,"result.xlsx"),1000)
+with gzip.open(os.path.join(save_path,"result_feature.pkl"),"wb",compresslevel=4) as fb:
+    pickle.dump((ext.features_ETC(n_estimators=1000,sort=True),ext.chi2(sort=True),ext.f_classif(sort=True)),fb)
 
 del ext.X,ext.Y
 etc = None
@@ -470,18 +473,18 @@ def test_max_feature():
     print("PCA: Best score with max features {} (test set {}):\t{} on the validation set".format(*best_pca))
     print("PCA with whiten: Best score with max features {} (test set {}):\t{} on the validation set".format(*best_pca_w))
 
-
     etc.max_features = last
 
 if __name__ == '__main__':
-    for n_estimators in [100,1000]:
-        best_FI = {}
-        print("ExtraTreesClassifier with {} estimators".format(n_estimators))
-        etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
-#        test_comparaisonFeatureImportance()
-        test_depth()
-#        test_Spaciality(True)
-#        test_Spaciality(False)
-#        test_max_feature()
-
-    counts = test_DimensionReduction()
+#    for n_estimators in [100,1000]:
+#        best_FI = {}
+#        print("ExtraTreesClassifier with {} estimators".format(n_estimators))
+#        etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
+##        test_comparaisonFeatureImportance()
+#        test_depth()
+##        test_Spaciality(True)
+##        test_Spaciality(False)
+##        test_max_feature()
+#
+#    counts = test_DimensionReduction()
+    pass

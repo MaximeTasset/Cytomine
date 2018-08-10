@@ -136,48 +136,135 @@ Created on Thu Aug  2 20:43:50 2018
 #with gzip.open('flutiste_data.im','rb')as fp:
 #    im,coord = pickle.load(fp)
 
+n_jobs=24
+
 from skimage.filters import roberts, sobel, scharr, prewitt
 from skimage.morphology import erosion,dilation,square
 import numpy as np
+from multiprocessing.pool import ThreadPool
+import sys,gzip,pickle,PIL
+from sklearn.metrics import accuracy_score
 
-def super_filter(im,th):
-
+def super_filter(im,th,dil=5):
+    dil = max(1,dil)
     if len(im.shape) == 3:
         gim =  0.2989 * im[:,:,0] + 0.5870 * im[:,:,1] + 0.1140 * im[:,:,2]
     elif len(im.shape) == 2:
         gim = im
     masks = []
     for filt in [sobel,roberts,scharr,prewitt]:
-        mask = sobel(gim)
+        mask = filt(gim)
         mask -= np.min(mask)
         mask /= np.max(mask)
         mask *= 255
         masks.append(mask.astype(np.uint8))
-
     mask = np.zeros_like(masks[0],dtype=np.float64)
 
     for m in masks:
         for v,l,u in [(0,0,th),(255,th,256)]:
             x,y = np.nonzero(m >= l)
-            i = np.nonzero(m[x,y] < u)
+            i = np.nonzero(m[x,y] < u)[0]
             mask[x[i],y[i]] += v/len(masks)
+
 
     mask -= np.min(mask)
     mask /= np.max(mask)
     mask *= 255
     umask = mask.astype(np.uint8)
 
-    return erosion(dilation(umask,square(4)),square(5))
+    return np.array(erosion(dilation(umask,square(dil)),square(max(dil-1,1))))
 
-def apply_super_filter(spectral_image,th_vote,th_filter):
-  supermask = [super_filter(spectral_image[:,:,i],th_filter) for i in range(spectral_image.shape[2])]
+def apply_super_filter(spectral_image,th_vote,th_filter,n_jobs=8):
+  if n_jobs <= 1:
+    supermask = [super_filter(spectral_image[:,:,i],th_filter) for i in range(spectral_image.shape[2])]
+  else:
+    pool = ThreadPool(n_jobs)
+    try:
+      def filt(args):
+          return super_filter(*args)
+      supermask = pool.map(filt,[(spectral_image[:,:,i],th_filter) for i in range(spectral_image.shape[2])])
+    finally:
+      pool.close()
   supermask = np.array(supermask)
   superfilter = np.sum(supermask>=128,axis=0)
-  superfilter = superfilter >= th_vote
   return superfilter
+#  superfilter = superfilter >= th_vote
+#  return superfilter
+
+
+def apply_super_filter_RGB(image,th_filter):
+  supermask = super_filter(image,th_filter)
+  supermask = np.array(supermask)
+  superfilter = supermask >= 128
+  return superfilter
+
+def score_filter(filt,true_filter):
+#    n_positif =  {tuple(xy) for xy in np.argwhere(true_filter)}
+#    n_positif =  len(n_positif & {tuple(xy) for xy in np.argwhere(filt)})
+#    n_negatif =  {tuple(xy) for xy in np.argwhere(true_filter == False)}
+#    n_negatif =  len(n_negatif & {tuple(xy) for xy in np.argwhere(filt == False)})
+#
+#    return (n_positif + n_negatif) / np.multiply(*true_filter.shape)
+    return accuracy_score(true_filter.flatten(),filt.flatten())
+
+with gzip.open("flutiste_data.im","rb") as fb:
+    s_im,_ = pickle.load(fb)
+s_im = np.swapaxes(s_im,0,1)
+truefilter = np.array(PIL.Image.open("labelled7.png"))
+xy = set([tuple(xy) for xy in np.argwhere(truefilter[:,:,0] == 255).tolist()])
+xy = xy & set([tuple(xy) for xy in np.argwhere(truefilter[:,:,1] == 0).tolist()])
+xy = list(xy & set([tuple(xy) for xy in np.argwhere(truefilter[:,:,2] == 0).tolist()]))
+x = [x for x,y in xy]
+y = [y for x,y in xy]
+truefilter = np.zeros(truefilter.shape[:-1],dtype=np.bool)
+truefilter[x,y] = True
+im = np.array(PIL.Image.open("image.png"))
+
+best = (0,0,None)
+for i in range(0,256):
+    sys.stdout.write("\r{}  ".format(i))
+    sys.stdout.flush()
+    filtrgb = super_filter(im,i,4)
+    supermask = filtrgb >= 128
+    score = score_filter(supermask,truefilter)
+    if score >= best[1]:
+        best = (i,score,supermask)
+sys.stdout.write("\n")
+print(best[:-1])
+
+print("multispectral")
+best_multi = (0,0,0)
+
+for i in range(0,255):#range(max(0,best[0]-10),min(256,best[0]+11)):
+    filt = apply_super_filter(s_im,0,i,n_jobs=n_jobs)
+    sys.stdout.write("{}  ".format(i))
+    sys.stdout.flush()
+    for j in range(1651):
+        sys.stdout.flush()
+        superfilter = filt >= j
+        score = score_filter(superfilter,truefilter)
+        if score > best_multi[2]:
+            best_multi = (i,j,score,filt)
+            print(best_multi[:-1])
+            sys.stdout.flush()
+
+sys.stdout.write("\n")
+with gzip.open("results.pkl","wb",compresslevel=4) as fb:
+    pickle.dump((best,best_multi),fb)
+
+
 
 #  superfilt = apply_super_filter(im,510,70)
 #  x,y = np.nonzero(superfilt)
 #  imm = im[:,:,:3].copy()
 #  imm[x,y] = (255,0,0)
 #  PIL.Image.fromarray(np.swapaxes(imm.astype(np.uint8),0,1))
+
+#truefilter = np.array(PIL.Image.open("../../detection/labelled5.png"))
+#xy = set([tuple(xy) for xy in np.argwhere(truefilter[:,:,0] == 255).tolist()])
+#xy = xy & set([tuple(xy) for xy in np.argwhere(truefilter[:,:,1] == 0).tolist()])
+#xy = list(xy & set([tuple(xy) for xy in np.argwhere(truefilter[:,:,2] == 0).tolist()]))
+#x = [x for x,y in xy]
+#y = [y for x,y in xy]
+#truefilter = np.zeros(truefilter.shape[:-1],dtype=np.bool)
+#truefilter[x,y] = True

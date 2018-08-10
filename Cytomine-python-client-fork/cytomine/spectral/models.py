@@ -123,7 +123,7 @@ class SpectralModel:
             indexes = list(range(ln))
             for i in range(self.n_estimators):
                 np.random.shuffle(indexes)
-                self.estimators.append(self.base_estimator(**self.base_estimator_param).fit(X[indexes[:int(use*ln)],:],y[indexes[:int(use*ln)]]))
+                self.estimators.append(fit([self.base_estimator,self.base_estimator_param,[X[indexes[:int(use*ln)],:],y[indexes[:int(use*ln)]]]]))
 
 
         return self

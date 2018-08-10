@@ -26,10 +26,10 @@ from cytomine.models import Software, SoftwareParameter,SoftwareProject
 
 save_path = "./tmp"
 
-cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
+cytomine_host="research.cytomine.be"
 id_project=28146931
 
 def main(argv):

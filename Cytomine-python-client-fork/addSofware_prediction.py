@@ -24,10 +24,10 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 from cytomine import Cytomine
 from cytomine.models import Software, SoftwareParameter,SoftwareProject
 
-cytomine_host="demo.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project= XXX
+cytomine_host="research.cytomine.be"
 
 save_path = "./tmp"
 

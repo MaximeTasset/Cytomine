@@ -183,7 +183,7 @@ class Extractor:
           row += 2
           worksheet.write_row(row,0,["nb_annotation",self.numAnnotation])
           row += 1
-          worksheet.write_row(row,0,["nb_pixel",len(self.data["X"])])
+          worksheet.write_row(row,0,["nb_pixel",len(self.X)])
           row += 1
           fields = ['term_name','nb_annotation', 'nb_pixel']
           worksheet.write_row(row, 0, fields)
@@ -205,7 +205,7 @@ class Extractor:
               writer.writerow({'layer':i,'chi2':chi2[i][0], 'f_classif':fclassif[i][0],'ExtraTree':etc[i][0]})
           writer = csv.writer(csvfile,dialect='excel')
           writer.writerow(["nb_annotation",self.numAnnotation])
-          writer.writerow(["nb_pixel",len(self.data["X"])])
+          writer.writerow(["nb_pixel",len(self.X)])
           fieldnames = ['term_name','nb_annotation', 'nb_pixel']
           writer = csv.DictWriter(csvfile, fieldnames=fieldnames,dialect='excel')
           writer.writeheader()
@@ -351,15 +351,12 @@ class Extractor:
                                   self.done += 1
                                   sys.stdout.write("\r{}/{}      ".format(self.done,nb))
                                   sys.stdout.flush()
-                          if trim:
-                              dsp = {tuple(data['pxl']):data for data in sp}
-                              sti = rectangle[0]
-                              stj = rectangle[1]
-                              si = rectangle[2]
-                              sj = rectangle[3]
-                              sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
-                          else:
-                              sp.sort(key=lambda data: data["pxl"])
+                          dsp = {tuple(data['pxl']):data for data in sp}
+                          sti = rectangle[0]
+                          stj = rectangle[1]
+                          si = rectangle[2]
+                          sj = rectangle[3]
+                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
 
                           return sp
 
@@ -559,8 +556,8 @@ def extract_roi(annotations_list,predict_terms_list,image_width,image_height,pix
 
             minx = max(minx - pixel_border,0)
             miny = max(miny - pixel_border,0)
-            maxx = min(maxx + pixel_border,image_width - 1)
-            maxy = min(maxy + pixel_border,image_height - 1)
+            maxx = min(maxx + pixel_border,image_width)
+            maxy = min(maxy + pixel_border,image_height)
 
             sizew = int(abs(maxx - minx))
             sizeh = int(abs(maxy - miny))

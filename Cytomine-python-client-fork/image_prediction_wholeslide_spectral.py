@@ -29,8 +29,6 @@ __copyright__       = "Copyright 2010-2018 University of Liège, Belgium, http:/
 #in the whole image, apply post-processing based on min/max are, apply a final classifier on geometries,
 #and finally output statistics (counts/area).
 
-import sys
-
 import pickle
 
 import os
