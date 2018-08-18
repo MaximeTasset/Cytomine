@@ -42,7 +42,7 @@ import psutil
 import gzip
 
 class Extractor:
-    def __init__(self, filename=None,verbose=True,nb_job=1):
+    def __init__(self, filename=None,verbose=True,nb_job=1,dtype=np.int8):
         """
         Parameters
         ----------
@@ -53,7 +53,7 @@ class Extractor:
         self.filename = filename
         self.nb_job = nb_job if nb_job > 0 else max(psutil.cpu_count() + nb_job,1)
         self.verbose = verbose
-
+        self.dtype=dtype
 
         self.data = None
 
@@ -325,9 +325,9 @@ class Extractor:
                               (w,h,sizew,sizeh) = requests.pop()
                               try:
                                 if sp is None:
-                                    sp = [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=np.uint8)} for p in im.rectangle_all(w,h,sizew,sizeh)]
+                                    sp = [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=self.dtype)} for p in im.rectangle_all(w,h,sizew,sizeh)]
                                 else:
-                                    sp += [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=np.uint8)} for p in im.rectangle_all(w,h,sizew,sizeh)]
+                                    sp += [{"pxl":p["pxl"],"spectra":np.array(p["spectra"],dtype=self.dtype)} for p in im.rectangle_all(w,h,sizew,sizeh)]
                               except socket.error :
                                 print(socket.error)
                                 time.sleep(5)
@@ -356,7 +356,7 @@ class Extractor:
                           stj = rectangle[1]
                           si = rectangle[2]
                           sj = rectangle[3]
-                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=np.uint8),"fetched":False} for i,j in np.ndindex((si,sj))]
+                          sp = [dsp[sti+i,stj+j] if (sti+i,stj+j) in dsp else {'pxl':(sti+i,stj+j),'spectra':np.zeros(nb_image,dtype=self.dtype),"fetched":False} for i,j in np.ndindex((si,sj))]
 
                           return sp
 
@@ -394,7 +394,7 @@ class Extractor:
 
             spectrum = [pixel for pixel in spect[i]]
             spectrum.sort(key=lambda spectra: tuple(spectra['pxl']))
-            image = np.array([spectra['spectra'] for spectra in spectrum],dtype=np.uint8)
+            image = np.array([spectra['spectra'] for spectra in spectrum],dtype=self.dtype)
             image_coord = np.array([spectra['pxl'] for spectra in spectrum])
             if trim:
                 lookat = np.array([0 if 'fetched' in spectra else 1 for spectra in spectrum])
@@ -465,10 +465,12 @@ class Extractor:
         return self
 
 
-    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None,dtype=np.uint8):
+    def rois2data(self,rois=None,sliceSize=(3,3),step=1,notALabelFlag=0,flatten=True,bands=None,dtype=None):
         """
         rois a list of tuple (np.array((width,height,features)),np.array((width,height)))
         """
+        if dtype is None:
+          dtype = self.dtype
 
         if rois is None:
             if hasattr(self,"rois"):
@@ -493,12 +495,12 @@ class Extractor:
         if hasattr(self, "numData") and hasattr(self, "numUnknown") and hasattr(self, "numFeature"):
             return {"numData":self.numData,"numUnknown":self.numUnknown,"numFeature":self.numFeature}
 
-def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None,dtype=np.uint8):
+def roi2data(roi,sliceSize=(3,3),step=1,flatten=True,splitted=False,bands=None,dtype=None):
         """
         roi a np.array((width,height,features))
 
         """
-        if not roi.dtype is np.dtype(dtype):
+        if not dtype is None and not roi.dtype is np.dtype(dtype):
           roi = roi.astype(dtype)
         if not splitted:
           x_coord = []

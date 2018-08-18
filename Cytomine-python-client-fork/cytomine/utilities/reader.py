@@ -356,7 +356,6 @@ def splitRect(rect,maxw,maxh):
 
 # normally the (0,0) is in the bottom-left for cytomine but for the spectral REST API
 # it's top-left
-
 class CytomineSpectralReader(Reader):
 
     def __init__(self,imagegroup_id,bounds = Bounds(0,0, 1024, 1024),tile_size = Bounds(0,0,30,30),overlap=0,num_thread=4):
@@ -409,7 +408,6 @@ class CytomineSpectralReader(Reader):
           requests = [rectangle]
           while len(requests):
             (w,h,sizew,sizeh) = requests.pop()
-#            w,h = self.reverseHeight((w,h))
             w,h,sizew,sizeh =int(w),int(h),int(sizew),int(sizeh)
             try:
               if sp is None:
@@ -420,22 +418,18 @@ class CytomineSpectralReader(Reader):
               print(socket.error)
               time.sleep(5)
               if sizew > 1 and sizeh > 1:
-                #restore the cytomine coordonates
-#                w,h = self.reverseHeight((w,h))
                 requests.extend(splitRect((w,h,sizew,sizeh),int(sizew/2),int(sizeh/2)))
               else:
-#                w,h = self.reverseHeight((w,h))
                 requests.append((w,h,sizew,sizeh))
               continue
             except socket.timeout :
               print(socket.timeout)
               time.sleep(5)
               if sizew > 1 and sizeh > 1:
-                #restore the cytomine coordonates
-#                w,h = self.reverseHeight((w,h))
+
                 requests.extend(splitRect((w,h,sizew,sizeh),int(sizew/2),int(sizeh/2)))
               else:
-#                w,h = self.reverseHeight((w,h))
+
                 requests.append((w,h,sizew,sizeh))
 
               continue
@@ -451,7 +445,6 @@ class CytomineSpectralReader(Reader):
 
     def getResult(self,all_coord=True,in_list=False):
 
-        #self.results a queue of (map/map_result,is_async,tile_coord)
         if len(self.results):
             result = self.results.pop()
             if result["async"]:
@@ -467,29 +460,9 @@ class CytomineSpectralReader(Reader):
                         break
                 if not num_spectra:
                     return
-#                if not in_list:
-#                    image = np.zeros((result["tile"][2],result["tile"][3],num_spectra),dtype=np.uint8)
-#                    if all_coord:
-#                        image_coord = np.zeros((result["tile"][2],result["tile"][3],2))
-#                    else:
-#                        image_coord = np.asarray(result["tile"])
-#                else:
-#                    image = []
-#                    image_coord = []
+
                 spectrum = [spectra for collection in list_collections for spectra in collection]
 
-#                for collection in list_collections:
-#                    for spectra in collection:
-
-#                        if not in_list:
-#                            position = (abs(result["tile"][0] - spectra['pxl'][0]),abs(result["tile"][1] - spectra['pxl'][1]))
-#                            image[position] = spectra['spectra']
-#                            if all_coord:
-#                                image_coord[position] = spectra['pxl']
-#                        else:
-#                            image_coord.append(spectra['pxl'])
-#                            image.append(spectra['spectra'])
-#                        spectrum.append(spectra)
                 del list_collections
                 spectrum.sort(key=lambda spectra: spectra['pxl'])
 

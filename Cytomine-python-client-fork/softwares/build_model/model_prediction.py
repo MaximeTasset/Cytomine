@@ -106,9 +106,9 @@ if __name__ == "__main__":
     if len(sys.argv[1:]):
       software = main(sys.argv[1:])
     else:
-      software = main(['--cytomine_host',"demo.cytomine.be",
-                       "--cytomine_public_key","f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5",
-                       "--cytomine_private_key","9e94aa70-4e7c-4152-8067-0feeb58d42eb",
+      software = main(['--cytomine_host',"research.cytomine.be",
+                       "--cytomine_public_key","XXX",
+                       "--cytomine_private_key","XXX",
                        ])
 
     main(sys.argv[1:])

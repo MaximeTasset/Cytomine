@@ -33,11 +33,10 @@ if __name__ == "__main__":
   print(asynchrone)
   sys.stdout.flush()
 
-  cytomine_host="demo.cytomine.be"
+  cytomine_host="research.cytomine.be"
   cytomine_public_key="XXX"
   cytomine_private_key="XXX"
   id_project=28146931
-  #id_users=[25637310]
 
   #Connection to Cytomine Core
   with Cytomine(cytomine_host, cytomine_public_key, cytomine_private_key, verbose= logging.WARNING,timeout=1200) as cytomine:

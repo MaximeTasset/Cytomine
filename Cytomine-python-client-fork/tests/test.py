@@ -50,14 +50,17 @@ if fileid == 1:
     filename = "extractedData.save"
     save_path = "./colors"
 elif fileid == 10:
+    filename = "MaldiDemoData_tsne.save"
+    save_path = "./MaldiDemo_tsne"
+elif fileid == 100:
     filename = "MaldiDemoData.save"
     save_path = "./MaldiDemo"
 else:
-    filename = "flutistev4.save"
-    save_path = "./Flutistev4"
+    filename = "flutiste.save"
+    save_path = "./Flutiste"
 
 os.makedirs(save_path,exist_ok=True)
-ext = Extractor(filename,nb_job=n_jobs)
+ext = Extractor(os.path.join(save_path,filename),nb_job=n_jobs)
 try:
     print("load data from file {}".format(filename))
     ext.readFile()
@@ -102,9 +105,9 @@ val_SamplePCA_w_X = pca_w.transform(val_SampleX)
 
 val_SampleY = ext.Y[indexes[int(test*len(indexes)):int(train*len(indexes))]]
 
-ext.saveFeatureSelectionInCSV(os.path.join(save_path,"result.xlsx"),1000)
-with gzip.open(os.path.join(save_path,"result_feature.pkl"),"wb",compresslevel=4) as fb:
-    pickle.dump((ext.features_ETC(n_estimators=1000,sort=True),ext.chi2(sort=True),ext.f_classif(sort=True)),fb)
+#ext.saveFeatureSelectionInCSV(os.path.join(save_path,"result.xlsx"),1000)
+#with gzip.open(os.path.join(save_path,"result_feature.pkl"),"wb",compresslevel=4) as fb:
+#    pickle.dump((ext.features_ETC(n_estimators=1000,sort=True),ext.chi2(sort=True),ext.f_classif(sort=True)),fb)
 
 del ext.X,ext.Y
 etc = None
@@ -165,7 +168,7 @@ def test_comparaisonFeatureImportance():
 
     best_FI = {}
 
-    for i in sorted(list(set(list(range(0,int(nb_feature-50),100))+list(range(int(nb_feature-50),nb_feature,1))))):
+    for i in sorted(list(set(list(range(0,max(0,int(nb_feature-50)),100))+list(range(max(0,int(nb_feature-50)),nb_feature,1))))):
         print("\nScores with best {} features/components:\n".format(nb_feature-i))
         n_feature.append(nb_feature-i)
 
@@ -411,8 +414,6 @@ def test_Spaciality(reduce):
     print("Test: Spaciality Importance (tile size): reduce {}".format(reduce))
     print("================================================")
     best = (0,0,0)
-    best_pca = (0,0,0)
-    best_pca_w = (0,0,0)
 
 
     for i in range(1,11):
@@ -427,17 +428,8 @@ def test_Spaciality(reduce):
           break
         del X,y
 
-        X,y = ext.rois2data(None,(i,i),flatten=False,bands=None)
-        stop, best_pca = spaciality(roi_pca(X,indexes,False),y,i,indexes,best_pca,"pca")
-        if stop:
-          break
-        stop, best_pca_w = spaciality(roi_pca(X,indexes,True),y,i,indexes,best_pca_w,"pca_w")
-        if stop:
-          break
 
     print("Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best[0],best[1],best[2]))
-    print("PCA: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca[0],best_pca[1],best_pca[2]))
-    print("PCA_w: Best score with a slice size of {} (test set {}):\t{} on the validation set".format(best_pca_w[0],best_pca_w[1],best_pca_w[2]))
 
 def test_max_feature():
     print("================================================")
@@ -474,17 +466,43 @@ def test_max_feature():
     print("PCA with whiten: Best score with max features {} (test set {}):\t{} on the validation set".format(*best_pca_w))
 
     etc.max_features = last
-
+def feature():
+    with gzip.open("Flutiste/result_feature.pkl",'rb') as fb:
+        imp,chi,fc = pickle.load(fb)
+    imp = [i for _,i in imp]
+    chi = [i for _,i in chi]
+    fc = [i for _,i in fc]
+    ft = [('imp',imp),('chi2',chi),('f_classif',fc)]
+    perm = [(0,1),(0,2),(1,2),(0,1,2)]
+    for p in perm:
+        common = []
+        for i in range(1,len(chi)+1):
+            for j,ind in enumerate(p):
+                if not j:
+                    X = set(ft[ind][1][:i])
+                else:
+                    X &= set(ft[ind][1][:i])
+            common.append(len(X)/i)
+        name = ""
+        for j,ind in enumerate(p):
+            if j:
+                name += "&"
+            name +=ft[ind][0]
+        plt.plot(range(1,len(chi)+1),common,label=name)
+    plt.ylabel("Number of Common Features")
+    plt.xlabel("Number of Features")
+    plt.legend()
+    plt.savefig(os.path.join("Flutiste","comparaison_feature_imp_p.png"))
+    plt.close()
 if __name__ == '__main__':
-#    for n_estimators in [100,1000]:
-#        best_FI = {}
-#        print("ExtraTreesClassifier with {} estimators".format(n_estimators))
-#        etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
-##        test_comparaisonFeatureImportance()
-#        test_depth()
-##        test_Spaciality(True)
-##        test_Spaciality(False)
-##        test_max_feature()
-#
-#    counts = test_DimensionReduction()
-    pass
+    for n_estimators in [100,1000]:
+        best_FI = {}
+        print("ExtraTreesClassifier with {} estimators".format(n_estimators))
+        etc = ETC(n_jobs=n_jobs,n_estimators=n_estimators)
+        test_comparaisonFeatureImportance()
+        test_depth()
+        test_Spaciality(True)
+        test_Spaciality(False)
+        test_max_feature()
+
+    counts = test_DimensionReduction()

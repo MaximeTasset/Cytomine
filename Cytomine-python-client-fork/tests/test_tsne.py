@@ -27,13 +27,15 @@ from sklearn.manifold import TSNE
 from numpy.random import shuffle
 from sklearn.decomposition import PCA
 from cytomine.spectral.extractor import Extractor
+from cytomine.models import *
 import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 plt.switch_backend("agg")
 import numpy as np
-import sys
+import sys,PIL
 import pickle
 
-cytomine_host="demo.cytomine.be"
+cytomine_host="research.cytomine.be"
 cytomine_public_key="XXX"
 cytomine_private_key="XXX"
 id_project=0
@@ -103,4 +105,50 @@ def test_DimensionReduction():
   return tsne_score
 
 if __name__ == '__main__':
-  counts = test_DimensionReduction()
+    counts = test_DimensionReduction()
+
+    with Cytomine(host=cytomine_host, public_key=cytomine_public_key, private_key=cytomine_private_key,
+                  verbose=logging.WARNING) as cytomine:
+
+        igh = ImageGroupCollection({"project":31054043}).fetch()[0].fetch().image_groupHDF5()
+        im = igh.rectangle(0,0,260,134)
+        pixels = []
+        for i,j in np.ndindex(im.shape[:-1]):
+            pixels.append(im[i,j])
+        newP = TSNE(3).fit_transform(pixels)
+        imm = np.zeros((260, 134,3))
+        it = iter(newP)
+        for i,j in np.ndindex(im.shape[:-1]):
+            imm[i,j] = it.__next__()
+        immr = imm - imm.min()
+        immr = immr/immr.max()
+        immr *= 255
+        immr = immr.astype(np.uint8)
+        immr = np.swapaxes(immr,0,1)
+        PIL.Image.fromarray(immr,mode='RGB').save("MaldiDemo_tsne/MALDI-DEMO_tsne.png")
+        PIL.Image.fromarray(np.swapaxes(im[:,:,[1,1,1]].astype(np.uint8),0,1),mode='RGB').save("MaldiDemo_tsne/MALDI-DEMO.png")
+
+        filename = "MaldiDemo/MaldiDemoData.save"
+        nfilename = "MaldiDemo_tsne/MaldiDemoData_tsne.save"
+        ext = Extractor(filename,nb_job=n_jobs)
+        try:
+            print("load data from file {}".format(filename))
+            ext.readFile()
+        except FileNotFoundError:
+            print("File not found... Trying to fetch it from Cytomine")
+            from cytomine import Cytomine
+            import logging
+            ext.loadDataFromCytomine(id_project=id_project)
+            print("Saving data to file for later uses")
+            ext.writeFile()
+        lab = np.zeros((260,134),dtype=int)
+        newX = []
+        for i,y in enumerate(ext.Y):
+            lab[ext.data_coord[i][0],134-ext.data_coord[i][1]] = y
+            newX.append(imm[ext.data_coord[i][0],134-ext.data_coord[i][1]])
+        ext.data["rois"] = [(imm,lab)]
+        ext.data["X"] = np.asarray(newX)
+        ext.data["numFeature"] = 3
+        print("save data to file {}".format(nfilename))
+        Extractor.write(nfilename,ext.data)
+

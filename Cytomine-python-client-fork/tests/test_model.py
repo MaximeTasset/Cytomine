@@ -18,13 +18,32 @@ import gzip
 import numpy as np
 
 import sys
-filename = "flutistev4.save"
+import os
+save_path = "./Flutiste"
+filename = "flutiste.save"
 n_jobs = 90
 id_project = 56924820
 slice_size = 10
 
-print(filename)
+cytomine_host="demo.cytomine.be"
+cytomine_public_key="XXX"
+cytomine_private_key="XXX"
+id_project=0
 
+os.makedirs(save_path,exist_ok=True)
+ext = Extractor(os.path.join(save_path,filename),nb_job=n_jobs)
+try:
+    print("load data from file {}".format(filename))
+    ext.readFile()
+except FileNotFoundError:
+    print("File not found... Trying to fetch it from Cytomine")
+    from cytomine import Cytomine
+    import logging
+    with Cytomine(cytomine_host,cytomine_public_key,cytomine_private_key,verbose=logging.WARNING):
+      ext.loadDataFromCytomine(id_project=id_project)
+      print("Saving data to file for later uses")
+      ext.writeFile()
+del ext.data,ext.unknown_X,ext.unknown_coord,ext.data_coord
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -52,9 +71,7 @@ class kerastimator:
         return self.estimator.predict(X).reshape(X.shape[0])
 
 def test1():
-#    ig = ImageGroupCollection({"project":56924820}).fetch()[0]
-    ext = Extractor(filename,True,n_jobs)
-    ext.readFile()
+    
     def estimator():
         return ExtraTreesClassifier(n_estimators=1000,n_jobs=n_jobs)
     for slice_size in range(1,11):
@@ -62,19 +79,22 @@ def test1():
         sys.stdout.flush()
 
         sm = SpectralModel(base_estimator=estimator,n_estimators=1,slice_size=(slice_size,slice_size),n_jobs=1)
-#        sm = SpectralModel(base_estimator=kerastimator,base_estimator_param={"input_size":(slice_size**2)*ext.numFeature},n_estimators=1,slice_size=(slice_size,slice_size),n_jobs=0)
+
         sm.fit(ext.rois,use=1)
 
         sys.stdout.writelines("End fit\n")
         sys.stdout.flush()
 
-#        reader = CytomineSpectralReader(ig.id,Bounds(5531,2353,512,512),tile_size=Bounds(0,0,512,512),num_thread=8)
-#        reader.read()
-#        muli_image = reader.getResult(True,False)
-#        with gzip.open("flutiste_data.im",'wb') as fp:
-#            pickle.dump(muli_image,fp,protocol=pickle.HIGHEST_PROTOCOL)
-        with gzip.open("flutiste_data.im","rb") as fp:
-            multi_image,coord = pickle.load(fp)
+        try:
+            with gzip.open(os.path.join(save_path,"flutiste_data.im"),"rb") as fp:
+                multi_image,coord = pickle.load(fp)
+        except FileNotFoundError:
+            ig = ImageGroupCollection({"project":56924820}).fetch()[0]
+            reader = CytomineSpectralReader(ig.id,Bounds(5531,2353,512,512),tile_size=Bounds(0,0,512,512),num_thread=8)
+            reader.read()
+            multi_image = reader.getResult(True,False)
+            with gzip.open(os.path.join(save_path,"flutiste_data.im"),'wb') as fp:
+                pickle.dump(multi_image,fp,protocol=pickle.HIGHEST_PROTOCOL)
         full_mask = np.zeros(multi_image.shape[:-1])
         for i in range(0,full_mask.shape[0],30-slice_size):
             for j in range(0,full_mask.shape[1],30-slice_size):
@@ -89,7 +109,7 @@ def test1():
             if i + 30 >= full_mask.shape[0]:
                 break
 
-        with open("flutiste_data_best_{}.mask".format(slice_size),'wb') as fp:
+        with open(os.path.join(save_path,"flutiste_data_best_{}.mask".format(slice_size)),'wb') as fp:
             pickle.dump(full_mask,fp,protocol=pickle.HIGHEST_PROTOCOL)
 
 def test2():
@@ -105,19 +125,22 @@ def test2():
             def estimator():
                 return ExtraTreesClassifier(n_estimators=1000,n_jobs=n_jobs,max_features=max_features)
             sm = SpectralModel(base_estimator=estimator,n_estimators=1,slice_size=(slice_size,slice_size),n_jobs=1)
-    #        sm = SpectralModel(base_estimator=kerastimator,base_estimator_param={"input_size":(slice_size**2)*ext.numFeature},n_estimators=1,slice_size=(slice_size,slice_size),n_jobs=0)
             sm.fit(ext.rois,use=1)
 
             sys.stdout.writelines("End fit\n")
             sys.stdout.flush()
 
-    #        reader = CytomineSpectralReader(ig.id,Bounds(5531,2353,512,512),tile_size=Bounds(0,0,512,512),num_thread=8)
-    #        reader.read()
-    #        muli_image = reader.getResult(True,False)
-    #        with gzip.open("flutiste_data.im",'wb') as fp:
-    #            pickle.dump(muli_image,fp,protocol=pickle.HIGHEST_PROTOCOL)
-            with gzip.open("flutiste_data.im","rb") as fp:
-                multi_image,coord = pickle.load(fp)
+            try:
+              with gzip.open(os.path.join(save_path,"flutiste_data.im"),"rb") as fp:
+                  multi_image,coord = pickle.load(fp)
+            except FileNotFoundError:
+                ig = ImageGroupCollection({"project":56924820}).fetch()[0]
+                reader = CytomineSpectralReader(ig.id,Bounds(5531,2353,512,512),tile_size=Bounds(0,0,512,512),num_thread=8)
+                reader.read()
+                multi_image = reader.getResult(True,False)
+                with gzip.open(os.path.join(save_path,"flutiste_data.im"),'wb') as fp:
+                    pickle.dump(multi_image,fp,protocol=pickle.HIGHEST_PROTOCOL)
+
             full_mask = np.zeros(multi_image.shape[:-1])
             for i in range(0,full_mask.shape[0],step-slice_size):
                 for j in range(0,full_mask.shape[1],step-slice_size):
@@ -132,10 +155,10 @@ def test2():
                 if i + step >= full_mask.shape[0]:
                     break
 
-            with open("flutiste_data_best_{}_{}.mask".format(slice_size,name),'wb') as fp:
+            with open(os.path.join(save_path,"flutiste_data_best_{}_{}.mask".format(slice_size,name)),'wb') as fp:
                 pickle.dump(full_mask,fp,protocol=pickle.HIGHEST_PROTOCOL)
 
-with Cytomine(host="demo.cytomine.be", public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5", private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb",
+with Cytomine(host="research.cytomine.be", public_key="f1f8cacc-b71a-4bc2-a6cd-e6bb40fd19b5", private_key="9e94aa70-4e7c-4152-8067-0feeb58d42eb",
                   verbose=logging.WARNING) as cytomine:
-
+     test1()
      test2()
